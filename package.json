@@ -1,16 +1,7 @@
 {
-	"name": "electron-react-tailwind-template",
-	"author": {
-		"email": "demirci.baris38@gmail.com",
-		"name": "Barış DEMİRCİ",
-		"url": "https://338.rocks"
-	},
-	"description": "Electron app template with React and Tailwind CSS",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/barbarbar338/electron-react-tailwind-template"
-	},
-	"license": "GPL-3.0",
+	"name": "pvk",
+	"description": "pvk",
+	"license": "MIT",
 	"version": "1.0.1",
 	"private": true,
 	"devDependencies": {
