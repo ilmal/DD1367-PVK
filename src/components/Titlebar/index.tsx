@@ -28,7 +28,7 @@ export const Titlebar: FC = () => {
 	const onQuit = () => app.quit();
 
 	return (
-		<div className="title-bar sticky top-0 select-none">
+		<div className="title-bar sticky top-0 select-none flex flex-row">
 			<div className="menu-button-container">
 				<img
 					id="icon"
