@@ -31,21 +31,20 @@ export const Layout: FC<ILayout> = ({ children }) => {
   }, []);
 
   return (
-    <>
+    <div className="max-h-screen overflow-hidden">
       <Titlebar />
 
       {/* Container for sidebar + main area */}
-      <div className="flex h-screen">
+      <div className="h-screen flex">
 
         {/* Sidebar */}
         <SideBar />
 
         {/* Main area */}
         <main className="flex-1 overflow-auto bg-white select-none flex flex-row">
-          {/* If you still want to render child components/pages below, you can do so */}
           <div>{children}</div>
         </main>
       </div>
-    </>
+    </div>
   );
 };

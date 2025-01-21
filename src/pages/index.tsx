@@ -1,34 +1,59 @@
-import { Layout } from "../components/Layout";
 import React, { FC, useState, useCallback } from "react";
+import { Layout } from "../components/Layout";
 import { CanvasArea } from "../components/CanvasArea";
-import { CanvasMenu } from "../components/CanvasMenu";
 
-interface Shape {
-  type: string;
-  x: number;
-  y: number;
-}
+let idCounter = 3;
 
 export const IndexPage: FC = () => {
-  const [shapes, setShapes] = useState<Shape[]>([]);
+  const [shapes, setShapes] = useState([
+    { id: 1, type: "circle", x: 150, y: 120 },
+    { id: 2, type: "rectangle", x: 350, y: 200 },
+  ]);
 
-  // Example: function to add a shape to the canvas
-  const handleAddObject = useCallback((type: string) => {
-    const x = Math.random() * 500 + 50;
-    const y = Math.random() * 400 + 50;
-    setShapes((prev) => [...prev, { type, x, y }]);
+  const [connections, setConnections] = useState<{ fromId: number; toId: number }[]>([]);
+
+  const handleAddCircle = useCallback(() => {
+    setShapes((prev) => [
+      ...prev,
+      { id: idCounter++, type: "circle", x: 200, y: 200 },
+    ]);
   }, []);
 
+  const handleAddRectangle = useCallback(() => {
+    setShapes((prev) => [
+      ...prev,
+      { id: idCounter++, type: "rectangle", x: 400, y: 200 },
+    ]);
+  }, []);
 
-	return (
-		<Layout>
-        <div className="flex-1 overflow-auto bg-white select-none flex flex-row">
-          <CanvasMenu onAddObject={handleAddObject} />
-          {/* Large canvas area */}
-          <div className="flex-1 p-2">
-            <CanvasArea shapes={shapes} />
-          </div>
+  const handleShapesUpdate = (updated: any[]) => {
+    setShapes(updated);
+  };
+
+  const handleConnectionsUpdate = (updated: { fromId: number; toId: number }[]) => {
+    setConnections(updated);
+  };
+
+  return (
+    <Layout>
+      <div className="flex flex-row w-full h-full">
+        <aside className="w-64 p-4 bg-gray-200 flex flex-col space-y-2">
+          <button className="bg-blue-600 text-white p-2 rounded" onClick={handleAddCircle}>
+            Add Circle
+          </button>
+          <button className="bg-blue-600 text-white p-2 rounded" onClick={handleAddRectangle}>
+            Add Rectangle
+          </button>
+        </aside>
+        <div className="flex-1">
+          <CanvasArea
+            shapes={shapes}
+            connections={connections}
+            onShapesUpdate={handleShapesUpdate}
+            onConnectionsUpdate={handleConnectionsUpdate}
+          />
         </div>
-		</Layout>
-	);
+      </div>
+    </Layout>
+  );
 };
