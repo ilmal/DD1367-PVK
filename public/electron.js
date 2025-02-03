@@ -1,54 +1,59 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
-const { autoUpdater } = require("electron-updater");
-const { createMainWindow } = require("./utils/createMainWindow");
-const { createPopupWindow } = require("./utils/createPopupWindow");
-const { showNotification } = require("./utils/showNotification");
-const AutoLaunch = require("auto-launch");
-const remote = require("@electron/remote/main");
-const config = require("./utils/config");
+// public/electron.js
+const { app, BrowserWindow, ipcMain } = require('electron');
+const path = require('path');
+const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer');
 
-if (config.isDev) require("electron-reloader")(module);
+require('@electron/remote/main').initialize();
 
-remote.initialize();
+let mainWindow;
 
-if (!config.isDev) {
-	const autoStart = new AutoLaunch({
-		name: config.appName,
-	});
-	autoStart.enable();
+async function createWindow() {
+  // Dynamically import electron-is-dev
+  const isDev = (await import('electron-is-dev')).default;
+
+  mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    minWidth: 800,
+    minHeight: 600,
+    frame: false,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: true,
+      enableRemoteModule: true,
+      preload: path.join(__dirname, 'preload.js')
+    }
+  });
+
+  require('@electron/remote/main').enable(mainWindow.webContents);
+
+  mainWindow.loadURL(
+    isDev
+      ? 'http://localhost:3000'
+      : `file://${path.join(__dirname, '../build/index.html')}`
+  );
+
+  if (isDev) {
+    installExtension(REACT_DEVELOPER_TOOLS)
+      .catch(err => console.log('Error loading React DevTools: ', err));
+  }
 }
 
-app.on("ready", async () => {
-	config.mainWindow = await createMainWindow();
-	config.popupWindow = await createPopupWindow();
+app.whenReady().then(createWindow);
 
-	showNotification(
-		config.appName,
-		"Application running on background! See application tray.",
-	);
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
 });
 
-app.on("window-all-closed", () => {
-	if (process.platform !== "darwin") app.quit();
+ipcMain.on('app_version', (event) => {
+  event.sender.send('app_version', { version: app.getVersion() });
 });
 
-app.on("activate", () => {
-	if (BrowserWindow.getAllWindows().length === 0)
-		config.mainWindow = createMainWindow();
+ipcMain.on('restart_app', () => {
+  app.relaunch();
+  app.exit();
 });
 
-ipcMain.on("app_version", (event) => {
-	event.sender.send("app_version", { version: app.getVersion() });
-});
-
-autoUpdater.on("update-available", () => {
-	config.mainWindow.webContents.send("update_available");
-});
-
-autoUpdater.on("update-downloaded", () => {
-	config.mainWindow.webContents.send("update_downloaded");
-});
-
-ipcMain.on("restart_app", () => {
-	autoUpdater.quitAndInstall();
+ipcMain.on('quit-app', () => {
+  app.quit();
 });

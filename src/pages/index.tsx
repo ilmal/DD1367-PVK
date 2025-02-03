@@ -1,59 +1,61 @@
-import React, { FC, useState, useCallback } from "react";
-import { Layout } from "../components/Layout";
+import React, { FC, useState } from "react";
 import { CanvasArea } from "../components/CanvasArea";
+import { CanvasMenu } from "../components/CanvasMenu";
 
-let idCounter = 3;
+interface Shape {
+  id: number;
+  type: "sensor" | "output" | "if";
+  x: number;
+  y: number;
+}
+interface Connection {
+  fromId: number;
+  toId: number;
+}
+
+let shapeCounter = 3;
 
 export const IndexPage: FC = () => {
-  const [shapes, setShapes] = useState([
-    { id: 1, type: "circle", x: 150, y: 120 },
-    { id: 2, type: "rectangle", x: 350, y: 200 },
+  const [shapes, setShapes] = useState<Shape[]>([
+    { id: 1, type: "sensor", x: 150, y: 120 },
+    { id: 2, type: "output", x: 350, y: 200 },
   ]);
+  const [connections, setConnections] = useState<Connection[]>([]);
 
-  const [connections, setConnections] = useState<{ fromId: number; toId: number }[]>([]);
-
-  const handleAddCircle = useCallback(() => {
-    setShapes((prev) => [
-      ...prev,
-      { id: idCounter++, type: "circle", x: 200, y: 200 },
-    ]);
-  }, []);
-
-  const handleAddRectangle = useCallback(() => {
-    setShapes((prev) => [
-      ...prev,
-      { id: idCounter++, type: "rectangle", x: 400, y: 200 },
-    ]);
-  }, []);
-
-  const handleShapesUpdate = (updated: any[]) => {
-    setShapes(updated);
+  const handleAddObject = (type: string) => {
+    if (type === "sensor") {
+      setShapes((prev) => [
+        ...prev,
+        { id: shapeCounter++, type: "sensor", x: 200, y: 200 },
+      ]);
+    } else if (type === "output") {
+      setShapes((prev) => [
+        ...prev,
+        { id: shapeCounter++, type: "output", x: 300, y: 300 },
+      ]);
+    } else if (type === "if") {
+      setShapes((prev) => [
+        ...prev,
+        { id: shapeCounter++, type: "if", x: 400, y: 250 },
+      ]);
+    }
   };
 
-  const handleConnectionsUpdate = (updated: { fromId: number; toId: number }[]) => {
+  const handleShapesUpdate = (updated: Shape[]) => setShapes(updated);
+  const handleConnectionsUpdate = (updated: Connection[]) =>
     setConnections(updated);
-  };
 
   return (
-    <Layout>
-      <div className="flex flex-row w-full h-full">
-        <aside className="w-64 p-4 bg-gray-200 flex flex-col space-y-2">
-          <button className="bg-blue-600 text-white p-2 rounded" onClick={handleAddCircle}>
-            Add Circle
-          </button>
-          <button className="bg-blue-600 text-white p-2 rounded" onClick={handleAddRectangle}>
-            Add Rectangle
-          </button>
-        </aside>
-        <div className="flex-1">
-          <CanvasArea
-            shapes={shapes}
-            connections={connections}
-            onShapesUpdate={handleShapesUpdate}
-            onConnectionsUpdate={handleConnectionsUpdate}
-          />
-        </div>
+    <div className="w-full h-full flex">
+      <CanvasMenu onAddObject={handleAddObject} />
+      <div className="flex-1 relative">
+        <CanvasArea
+          shapes={shapes}
+          connections={connections}
+          onShapesUpdate={handleShapesUpdate}
+          onConnectionsUpdate={handleConnectionsUpdate}
+        />
       </div>
-    </Layout>
+    </div>
   );
 };

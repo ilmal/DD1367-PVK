@@ -1,229 +1,159 @@
-import React, { useRef, useEffect, useState } from "react";
+// ./components/CanvasArea/index.tsx
+import React, { useCallback } from 'react';
+import ReactFlow, {
+  ReactFlowProvider,
+  MiniMap,
+  Controls,
+  Background,
+  Node,
+  Edge,
+  NodeTypes,
+  Connection as FlowConnection,
+} from 'reactflow';
+import { Handle, Position } from 'reactflow';
+import 'reactflow/dist/style.css';
 
 interface Shape {
   id: number;
-  type: string;
+  type: 'sensor' | 'output' | 'if';
   x: number;
   y: number;
 }
 
-interface Connection {
+interface CustomConnection {
   fromId: number;
   toId: number;
 }
 
-interface CanvasAreaProps {
+interface Props {
   shapes: Shape[];
-  connections: Connection[];
+  connections: CustomConnection[];
   onShapesUpdate: (updated: Shape[]) => void;
-  onConnectionsUpdate: (updated: Connection[]) => void;
+  onConnectionsUpdate: (updated: CustomConnection[]) => void;
 }
 
-export const CanvasArea: React.FC<CanvasAreaProps> = ({
+// Sensor node: a device with a left target and right source handle.
+const SensorNode = ({ data }: any) => (
+  <div style={{ border: '1px solid #444', borderRadius: '4px', backgroundColor: '#0A0', color: 'white', padding: '8px', fontFamily: 'monospace', minWidth: '120px' }}>
+    <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
+    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Sensor</div>
+    <div>{data.label || "Temperature Sensor"}</div>
+    <Handle type="source" position={Position.Right} style={{ background: '#555' }} />
+  </div>
+);
+
+// Output node: a device with a left target and right source handle.
+const OutputNode = ({ data }: any) => (
+  <div style={{ border: '1px solid #444', borderRadius: '4px', backgroundColor: '#007acc', color: 'white', padding: '8px', fontFamily: 'monospace', minWidth: '120px' }}>
+    <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
+    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Output</div>
+    <div>{data.label || "Display Output"}</div>
+    <Handle type="source" position={Position.Right} style={{ background: '#555' }} />
+  </div>
+);
+
+// If node: with one target handle on left and two source handles (for true and false branches)
+const IfNode = ({ data }: any) => (
+  <div style={{ border: '1px solid #444', borderRadius: '4px', backgroundColor: '#ffcc00', color: '#333', padding: '8px', fontFamily: 'monospace', minWidth: '140px' }}>
+    <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
+    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>If Condition</div>
+    <div>{data.label || "if (x > 10)"}</div>
+    <Handle type="source" position={Position.Right} id="true" style={{ top: '30%', background: '#555' }} />
+    <Handle type="source" position={Position.Right} id="false" style={{ top: '70%', background: '#555' }} />
+  </div>
+);
+
+const nodeTypes: NodeTypes = {
+  sensor: SensorNode,
+  output: OutputNode,
+  if: IfNode,
+};
+
+export const CanvasArea: React.FC<Props> = ({
   shapes,
   connections,
   onShapesUpdate,
-  onConnectionsUpdate
+  onConnectionsUpdate,
 }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Map your shapes to React Flow nodes.
+  const nodes: Node[] = shapes.map((shape) => ({
+    id: shape.id.toString(),
+    position: { x: shape.x, y: shape.y },
+    data: {
+      label:
+        shape.type === 'sensor'
+          ? "Temperature Sensor"
+          : shape.type === 'output'
+          ? "Display Output"
+          : "if (x > 10)",
+    },
+    type: shape.type,
+  }));
 
-  const [draggingShape, setDraggingShape] = useState<{
-    shapeId: number;
-    offsetX: number;
-    offsetY: number;
-  } | null>(null);
+  // Map connections to edges.
+  const edges: Edge[] = connections.map((conn) => ({
+    id: `e${conn.fromId}-${conn.toId}`,
+    source: conn.fromId.toString(),
+    target: conn.toId.toString(),
+    type: 'smoothstep',
+    animated: true,
+    style: { stroke: '#888', strokeWidth: 2 },
+  }));
 
-  const [connectingFrom, setConnectingFrom] = useState<number | null>(null);
-  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Rita befintliga kopplingar
-    connections.forEach(({ fromId, toId }) => {
-      const fromShape = shapes.find((s) => s.id === fromId);
-      const toShape = shapes.find((s) => s.id === toId);
-      if (fromShape && toShape) {
-        ctx.beginPath();
-        ctx.moveTo(fromShape.x, fromShape.y);
-        ctx.lineTo(toShape.x, toShape.y);
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-    });
-
-    // Rita shapes + handles
-    shapes.forEach((shape) => {
-      if (shape.type === "circle") {
-        ctx.beginPath();
-        ctx.arc(shape.x, shape.y, 30, 0, 2 * Math.PI);
-        ctx.fillStyle = "red";
-        ctx.fill();
-      } else {
-        ctx.fillStyle = "blue";
-        ctx.fillRect(shape.x - 30, shape.y - 30, 60, 60);
-      }
-
-      // Rita litet grönt "handle" till höger om formen
-      const handleX = shape.x + 35;
-      const handleY = shape.y;
-      ctx.beginPath();
-      ctx.arc(handleX, handleY, 5, 0, 2 * Math.PI);
-      ctx.fillStyle = "green";
-      ctx.fill();
-    });
-
-    // Rita temporär linje om vi "drar" en koppling
-    if (connectingFrom !== null && mousePos) {
-      const fromShape = shapes.find((s) => s.id === connectingFrom);
-      if (fromShape) {
-        ctx.beginPath();
-        ctx.moveTo(fromShape.x + 35, fromShape.y); 
-        ctx.lineTo(mousePos.x, mousePos.y);
-        ctx.strokeStyle = "gray";
-        ctx.setLineDash([5, 5]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
-    }
-  }, [shapes, connections, connectingFrom, mousePos]);
-
-  // Automatically resize the canvas to fill the window
-  useEffect(() => {
-    function handleResize() {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      // Match the displayed size (CSS) with internal drawing size
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-
-      // Redraw your shapes or whatever you need here:
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      shapes.forEach((shape) => {
-        // Just draw a simple circle as example
-        ctx.beginPath();
-        ctx.arc(shape.x, shape.y, 20, 0, 2 * Math.PI);
-        ctx.fillStyle = "red";
-        ctx.fill();
-      });
-    }
-
-    // Trigger once on mount
-    handleResize();
-
-    // Also trigger on every browser resize
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [shapes]);
-
-  // Returnerar shape + info om man klickade på "handle" eller ej
-  const getClickedShapeOrHandle = (x: number, y: number) => {
-    // Kolla handle först
-    for (let shape of shapes) {
-      const handleX = shape.x + 35;
-      const handleY = shape.y;
-      const distHandle = Math.sqrt((x - handleX) ** 2 + (y - handleY) ** 2);
-      if (distHandle <= 5) {
-        return { shape, isHandle: true };
-      }
-    }
-    // Kolla shape
-    for (let shape of shapes) {
-      if (shape.type === "circle") {
-        const dist = Math.sqrt((x - shape.x) ** 2 + (y - shape.y) ** 2);
-        if (dist <= 30) return { shape, isHandle: false };
-      } else {
-        if (x >= shape.x - 30 && x <= shape.x + 30 &&
-            y >= shape.y - 30 && y <= shape.y + 30) {
-          return { shape, isHandle: false };
-        }
-      }
-    }
-    return null;
-  };
-
-  // Fångar klick på canvas
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const clicked = getClickedShapeOrHandle(x, y);
-    if (clicked) {
-      if (clicked.isHandle) {
-        // Starta koppling
-        setConnectingFrom(clicked.shape.id);
-      } else {
-        // Börja dra en shape
-        const offsetX = x - clicked.shape.x;
-        const offsetY = y - clicked.shape.y;
-        setDraggingShape({ shapeId: clicked.shape.id, offsetX, offsetY });
-      }
-    }
-  };
-
-  // Fångar musdrag
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    setMousePos({ x, y });
-
-    if (draggingShape) {
-      const { shapeId, offsetX, offsetY } = draggingShape;
-      // Uppdatera position för shape
-      const updated = shapes.map((s) =>
-        s.id === shapeId ? { ...s, x: x - offsetX, y: y - offsetY } : s
+  const onNodeDragStop = useCallback(
+    (_: any, node: Node) => {
+      const id = parseInt(node.id);
+      const updatedShapes = shapes.map((shape) =>
+        shape.id === id
+          ? { ...shape, x: node.position.x, y: node.position.y }
+          : shape
       );
-      onShapesUpdate(updated);
-    }
-  };
+      onShapesUpdate(updatedShapes);
+    },
+    [shapes, onShapesUpdate]
+  );
 
-  // Släpper musknappen
-  const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+  const onConnect = useCallback(
+    (connection: FlowConnection) => {
+      if (!connection.source || !connection.target) return;
+      const newConnection = {
+        fromId: parseInt(connection.source),
+        toId: parseInt(connection.target),
+      };
+      onConnectionsUpdate([...connections, newConnection]);
+    },
+    [connections, onConnectionsUpdate]
+  );
 
-    // Om vi släpper när vi håller på att koppla
-    if (connectingFrom !== null) {
-      const target = getClickedShapeOrHandle(x, y);
-      if (target && !target.isHandle) {
-        // Skapa koppling
-        const fromId = connectingFrom;
-        const toId = target.shape.id;
-        if (fromId !== toId) {
-          onConnectionsUpdate([...connections, { fromId, toId }]);
-        }
-      }
-      setConnectingFrom(null);
-    }
-
-    // Avsluta drag
-    setDraggingShape(null);
-  };
+  // Fun totally ethical code right here, dont look in to this further, me have no shame... 
+  const xpath = '/html/body/div/div/div[2]/main/div/div/div/div/div[4]';
+  const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+  const node = result.singleNodeValue;
+  if (node && node.parentNode) {
+    node.parentNode.removeChild(node);
+  }
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ display: "block", width: "100vw", height: "100vh" }}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-    />
+    <ReactFlowProvider>
+      <div style={{ width: '100%', height: '100%' }}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          onNodeDragStop={onNodeDragStop}
+          onConnect={onConnect}
+          fitView
+        >
+          <MiniMap nodeColor={(node) => {
+            if (node.type === 'sensor') return '#0A0';
+            if (node.type === 'output') return '#007acc';
+            if (node.type === 'if') return '#ffcc00';
+            return '#eee';
+          }} />
+          <Controls />
+          <Background />
+        </ReactFlow>
+      </div>
+    </ReactFlowProvider>
   );
 };

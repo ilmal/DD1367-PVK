@@ -1,0 +1,601 @@
+This is the structure: 
+.
+├── all_contents.txt
+├── assets
+│   └── cirrus.jpg
+├── components
+│   ├── CanvasArea
+│   │   └── index.tsx
+│   ├── CanvasMenu
+│   │   └── index.tsx
+│   ├── Layout
+│   │   └── index.tsx
+│   ├── SideBar
+│   │   └── index.tsx
+│   └── Titlebar
+│       └── index.tsx
+├── index.tsx
+├── pages
+│   ├── index.tsx
+│   └── popup.tsx
+├── react-app-env.d.ts
+├── router.tsx
+├── styles
+│   ├── index.css
+│   ├── tailwind.css
+│   └── titlebar.css
+├── summarize.sh
+└── @types
+    └── global
+        └── index.d.ts
+
+12 directories, 17 files
+----- ./styles/tailwind.css -----
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+----- ./styles/titlebar.css -----
+.title-bar {
+	-webkit-app-region: drag;
+	margin: 0;
+	display: flex;
+	background-color: black;
+	width: 100%;
+	height: 2rem;
+}
+
+.menu-button-container {
+	display: flex;
+	align-items: center;
+	flex-grow: 1;
+}
+
+.app-name-container {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-grow: 1;
+	color: white;
+}
+
+.window-controls-container {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	flex-grow: 1;
+	color: white;
+}
+
+.menu-icon {
+	-webkit-app-region: no-drag;
+	margin-left: 0.5rem;
+	margin-right: 0.5rem;
+	width: 1.5rem;
+	height: 1.5rem;
+}
+
+.minimize-button {
+	-webkit-app-region: no-drag;
+	margin-left: 10px;
+	margin-right: 10px;
+}
+
+.min-max-button {
+	-webkit-app-region: no-drag;
+	margin-left: 10px;
+	margin-right: 10px;
+}
+
+.close-button {
+	-webkit-app-region: no-drag;
+	margin-left: 10px;
+	margin-right: 10px;
+}
+
+
+----- ./styles/index.css -----
+::-webkit-scrollbar {
+	width: 0.5rem;
+}
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #888;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: #555;
+}
+
+
+----- ./pages/popup.tsx -----
+import { FC } from "react";
+
+export const PopupPage: FC = () => {
+	return <div>Hello popup</div>;
+};
+
+
+----- ./pages/index.tsx -----
+import React, { FC, useState } from "react";
+import { CanvasArea } from "../components/CanvasArea";
+import { CanvasMenu } from "../components/CanvasMenu";
+
+interface Shape {
+  id: number;
+  type: "circle" | "rectangle";
+  x: number;
+  y: number;
+}
+interface Connection {
+  fromId: number;
+  toId: number;
+}
+
+let shapeCounter = 3;
+
+export const IndexPage: FC = () => {
+  const [shapes, setShapes] = useState<Shape[]>([
+    { id: 1, type: "circle", x: 150, y: 120 },
+    { id: 2, type: "rectangle", x: 350, y: 200 },
+  ]);
+  const [connections, setConnections] = useState<Connection[]>([]);
+
+  const handleAddObject = (type: string) => {
+    if (type === "circle") {
+      setShapes((prev) => [
+        ...prev,
+        { id: shapeCounter++, type: "circle", x: 200, y: 200 },
+      ]);
+    } else if (type === "rectangle") {
+      setShapes((prev) => [
+        ...prev,
+        { id: shapeCounter++, type: "rectangle", x: 300, y: 300 },
+      ]);
+    }
+  };
+
+  const handleConnectShapes = (fromId: number, toId: number) => {
+    setConnections((prev) => [...prev, { fromId, toId }]);
+  };
+
+  const handleShapesUpdate = (updated: Shape[]) => setShapes(updated);
+  const handleConnectionsUpdate = (updated: Connection[]) =>
+    setConnections(updated);
+
+  return (
+    <div className="w-full h-full flex">
+      {/* Canvas-specific menu */}
+      <CanvasMenu
+        onAddObject={handleAddObject}
+        onConnectShapes={handleConnectShapes}
+      />
+      {/* Canvas area */}
+      <div className="flex-1 relative">
+        <CanvasArea
+          shapes={shapes}
+          connections={connections}
+          onShapesUpdate={handleShapesUpdate}
+          onConnectionsUpdate={handleConnectionsUpdate}
+        />
+      </div>
+    </div>
+  );
+};
+
+
+----- ./all_contents.txt -----
+
+
+----- ./router.tsx -----
+import { FC } from "react";
+import { HashRouter, Route, Routes } from "react-router-dom";
+import { IndexPage } from "./pages";
+import { PopupPage } from "./pages/popup";
+import { Layout } from "./components/Layout";
+
+export const Router: FC = () => {
+  return (
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<IndexPage />} />
+          <Route path="popup" element={<PopupPage />} />
+        </Route>
+      </Routes>
+    </HashRouter>
+  );
+};
+
+
+----- ./components/SideBar/index.tsx -----
+import { FC, useState } from "react";
+
+
+export const SideBar: FC = () => {
+  const [collapsed, setCollapsed] = useState(false);
+
+	return (
+    <aside
+    className={`bg-gray-800 text-white flex flex-col transition-all duration-300
+      ${collapsed ? "w-16" : "w-64"}
+    `}
+  >
+    <div className="p-2 flex justify-end">
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="bg-gray-700 px-2 py-1 rounded hover:bg-gray-600 focus:outline-none"
+      >
+        ☰
+      </button>
+    </div>
+    <nav className="flex-1 p-2">
+      {/* Navigationslänkar eller menyinnehåll */}
+      <ul className="space-y-2">
+        <li className="hover:bg-gray-700 p-2 rounded">Meny 1</li>
+        <li className="hover:bg-gray-700 p-2 rounded">Meny 2</li>
+        <li className="hover:bg-gray-700 p-2 rounded">Meny 3</li>
+      </ul>
+    </nav>
+  </aside>
+);
+};
+
+
+----- ./components/CanvasArea/index.tsx -----
+import React, { useCallback } from 'react';
+import ReactFlow, {
+  ReactFlowProvider,
+  MiniMap,
+  Controls,
+  Background,
+  Node,
+  Edge,
+  NodeTypes,
+  Connection as FlowConnection
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+
+interface Shape {
+  id: number;
+  type: "circle" | "rectangle";
+  x: number;
+  y: number;
+}
+
+interface CustomConnection {
+  fromId: number;
+  toId: number;
+}
+
+interface Props {
+  shapes: Shape[];
+  connections: CustomConnection[];
+  onShapesUpdate: (updated: Shape[]) => void;
+  onConnectionsUpdate: (updated: CustomConnection[]) => void;
+}
+
+const LogicNode = ({ data }: any) => (
+  <div
+    style={{
+      padding: "10px",
+      border: "2px solid #333",
+      borderRadius: "8px",
+      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      color: "white",
+      minWidth: "100px",
+      textAlign: "center",
+    }}
+  >
+    {data.label || "Logic Node"}
+  </div>
+);
+
+const DataNode = ({ data }: any) => (
+  <div
+    style={{
+      padding: "10px",
+      border: "2px solid #333",
+      borderRadius: "8px",
+      background: "linear-gradient(135deg, #f6d365 0%, #fda085 100%)",
+      color: "white",
+      minWidth: "100px",
+      textAlign: "center",
+    }}
+  >
+    {data.label || "Data Node"}
+  </div>
+);
+
+const nodeTypes: NodeTypes = {
+  logic: LogicNode,
+  data: DataNode,
+};
+
+export const CanvasArea: React.FC<Props> = ({
+  shapes,
+  connections,
+  onShapesUpdate,
+  onConnectionsUpdate,
+}) => {
+  const nodes: Node[] = shapes.map((shape) => ({
+    id: shape.id.toString(),
+    position: { x: shape.x, y: shape.y },
+    data: { label: shape.type === "circle" ? "Logic Node" : "Data Node" },
+    type: shape.type === "circle" ? "logic" : "data",
+  }));
+
+  const edges: Edge[] = connections.map((conn) => ({
+    id: `e${conn.fromId}-${conn.toId}`,
+    source: conn.fromId.toString(),
+    target: conn.toId.toString(),
+    animated: true,
+    style: { stroke: "black", strokeWidth: 2 },
+  }));
+
+  const onNodeDragStop = useCallback(
+    (_: any, node: Node) => {
+      const id = parseInt(node.id);
+      const updatedShapes = shapes.map((shape) =>
+        shape.id === id
+          ? { ...shape, x: node.position.x, y: node.position.y }
+          : shape
+      );
+      onShapesUpdate(updatedShapes);
+    },
+    [shapes, onShapesUpdate]
+  );
+
+  const onConnect = useCallback(
+    (connection: FlowConnection) => {
+      // Add null checks and validation
+      if (!connection.source || !connection.target) {
+        console.warn('Invalid connection attempt');
+        return;
+      }
+  
+      const newConnection = {
+        fromId: parseInt(connection.source),
+        toId: parseInt(connection.target)
+      };
+      
+      onConnectionsUpdate([...connections, newConnection]);
+    },
+    [connections, onConnectionsUpdate]
+  );
+  
+  return (
+    <ReactFlowProvider>
+      <div style={{ width: "100%", height: "100%" }}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          onNodeDragStop={onNodeDragStop}
+          onConnect={onConnect}
+          fitView
+        >
+          <MiniMap />
+          <Controls />
+          <Background />
+        </ReactFlow>
+      </div>
+    </ReactFlowProvider>
+  );
+};
+
+
+----- ./components/Layout/index.tsx -----
+// components/Layout/index.tsx
+import React, { FC, useEffect } from 'react';
+import { Outlet } from 'react-router-dom';
+import { Titlebar } from '../Titlebar';
+import { SideBar } from '../SideBar';
+
+declare global {
+  interface Window {
+    electron: any;
+  }
+}
+
+export const Layout: FC = () => {
+  useEffect(() => {
+    if (!window.electron) return;
+
+    window.electron.ipcRenderer.send('app_version');
+    window.electron.ipcRenderer.on('app_version', (arg: any) => {
+      console.log('App version:', arg.version);
+    });
+
+    return () => {
+      window.electron.ipcRenderer.removeAllListeners('app_version');
+    };
+  }, []);
+
+  return (
+    <div className="min-h-[800px] min-w-[1200px] overflow-hidden">
+      <Titlebar />
+      <div className="h-screen flex">
+        <SideBar />
+        <main className="flex-1 overflow-auto bg-white select-none flex flex-row">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+};
+
+----- ./components/Titlebar/index.tsx -----
+// components/Titlebar/index.tsx
+import { FC, useEffect, useState } from 'react';
+import {
+  IoCloseOutline,
+  IoContractOutline,
+  IoExpandOutline,
+  IoRemove,
+} from 'react-icons/io5';
+import cirrus from '../../assets/cirrus.jpg';
+
+declare global {
+  interface Window {
+    electron: any;
+  }
+}
+
+export const Titlebar: FC = () => {
+  const [maximized, setMaximized] = useState(false);
+
+  useEffect(() => {
+    if (!window.electron) return;
+    
+    const currentWindow = window.electron.remote.getCurrentWindow();
+    setMaximized(currentWindow.isMaximized());
+
+    const updateMaximized = () => setMaximized(currentWindow.isMaximized());
+    currentWindow.on('maximize', updateMaximized);
+    currentWindow.on('unmaximize', updateMaximized);
+
+    return () => {
+      currentWindow.removeListener('maximize', updateMaximized);
+      currentWindow.removeListener('unmaximize', updateMaximized);
+    };
+  }, []);
+
+  const onMinimize = () => window.electron?.remote.getCurrentWindow().minimize();
+  const onMaximize = () => {
+    const win = window.electron?.remote.getCurrentWindow();
+    win.isMaximized() ? win.unmaximize() : win.maximize();
+  };
+  const onQuit = () => window.electron?.ipcRenderer.send('quit-app');
+
+  return (
+    <div className="title-bar sticky top-0 select-none flex flex-row">
+      <div className="menu-button-container">
+        <img
+          id="icon"
+          src={cirrus}
+          className="menu-icon select-none"
+          alt="cirrus"
+        />
+      </div>
+      <div className="app-name-container select-none">
+        <p>PVK go brrrr</p>
+      </div>
+      <div className="window-controls-container">
+        <button
+          title="Minimize"
+          className="minimize-button focus:outline-none hover:bg-gray-700"
+          onClick={onMinimize}
+        >
+          <IoRemove />
+        </button>
+        <button
+          title="Maximize"
+          className="min-max-button focus:outline-none hover:bg-gray-700"
+          onClick={onMaximize}
+        >
+          {maximized ? <IoContractOutline /> : <IoExpandOutline />}
+        </button>
+        <button
+          title="Close"
+          className="close-button focus:outline-none hover:bg-gray-700"
+          onClick={onQuit}
+        >
+          <IoCloseOutline />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+----- ./components/CanvasMenu/index.tsx -----
+import React from "react";
+
+interface CanvasMenuProps {
+  onAddObject: (type: string) => void;
+  onConnectShapes: (fromId: number, toId: number) => void;
+}
+
+export const CanvasMenu: React.FC<CanvasMenuProps> = ({ onAddObject, onConnectShapes }) => {
+  return (
+    <aside className="w-64 bg-white text-gray-800 p-4 flex flex-col">
+      <h2 className="text-lg mb-4">Objects</h2>
+      <button
+        onClick={() => onAddObject("circle")}
+        className="bg-gray-700 text-white rounded mb-2 p-2 hover:bg-gray-600"
+      >
+        Add Circle
+      </button>
+      <button
+        onClick={() => onAddObject("rectangle")}
+        className="bg-gray-700 text-white rounded mb-2 p-2 hover:bg-gray-600"
+      >
+        Add Rectangle
+      </button>
+      <button
+        onClick={() => onConnectShapes(1, 2)}
+        className="bg-gray-700 text-white rounded mb-2 p-2 hover:bg-gray-600"
+      >
+        Connect #1 & #2
+      </button>
+    </aside>
+  );
+};
+
+
+----- ./@types/global/index.d.ts -----
+export {};
+
+declare global {
+	namespace ReactTailwindTemplate {}
+}
+
+
+----- ./react-app-env.d.ts -----
+/// <reference types="react-scripts" />
+
+
+----- ./index.tsx -----
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { Router } from './router';
+import './styles/index.css';
+import './styles/tailwind.css';
+import './styles/titlebar.css';
+
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+root.render(
+  <React.StrictMode>
+    <Router />
+  </React.StrictMode>
+);
+
+
+----- ./summarize.sh -----
+#!/usr/bin/env bash
+
+OUTPUT_FILE="all_contents.txt"
+
+# Remove old output file if it exists
+[ -f "$OUTPUT_FILE" ] && rm "$OUTPUT_FILE"
+
+echo "This is the structure: " >> "$OUTPUT_FILE"
+tree . >> "$OUTPUT_FILE"
+
+# Loop through all files, skipping .git and checking if they're text and readable
+find . -type f -not -path '*/.git/*' | while read -r FILE; do
+  if [ -r "$FILE" ] && file "$FILE" | grep -q text; then
+    echo "----- $FILE -----" >> "$OUTPUT_FILE"
+    cat "$FILE" >> "$OUTPUT_FILE"
+    echo -e "\n" >> "$OUTPUT_FILE"
+  fi
+done
+
+echo "All text contents have been written to $OUTPUT_FILE."
+
+
+
