@@ -1,14 +1,9 @@
-// components/Layout/index.tsx
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useEffect, useState, useRef } from 'react';
 import { Outlet } from 'react-router-dom';
-import { Titlebar } from '../Titlebar';
 import { SideBar } from '../SideBar';
+import { Titlebar } from '../Titlebar';
+import { renameSync } from 'fs';
 
-declare global {
-  interface Window {
-    electron: any;
-  }
-}
 
 export interface Shape {
   id: number;
@@ -22,58 +17,172 @@ export interface Connection {
   toId: number;
 }
 
-let shapeCounter = 3;
+interface Canvas {
+  id: number;
+  name: string;
+}
+
+interface CanvasData {
+  id: number;
+  name: string;
+  shapes: Shape[];
+  connections: Connection[];
+  code: string;
+}
 
 export const Layout: FC = () => {
-
-  const [shapes, setShapes] = useState<Shape[]>([
-    { id: 1, type: "sensor", x: 150, y: 120 },
-    { id: 2, type: "output", x: 350, y: 200 },
+  // Initialize canvases state with one default canvas, including a code snippet.
+  const [canvases, setCanvases] = useState<CanvasData[]>([
+    {
+      id: 1,
+      name: "Canvas 1",
+      shapes: [
+        { id: 1, type: "sensor", x: 150, y: 120 },
+        { id: 2, type: "output", x: 350, y: 200 },
+      ],
+      connections: [],
+      code: `// Canvas 1 code
+function hello() {
+  console.log("Hello, Canvas 1!");
+}`
+    },
   ]);
-  const [connections, setConnections] = useState<Connection[]>([]);
+  const [activeCanvasId, setActiveCanvasId] = useState<number>(1);
+  
+  // Use a ref for shapeCounter to ensure unique shape IDs.
+  const shapeCounter = useRef(3);
 
-  // This function adds a new shape based on the type.
-  const handleAddObject = (type: string) => {
+  // Get active canvas data.
+  const activeCanvas = canvases.find(c => c.id === activeCanvasId);
+  if (!activeCanvas) return null;
+
+  // Update active canvas shapes.
+  const handleShapesUpdate = (newShapes: Shape[]) => {
+    setCanvases(prev =>
+      prev.map(canvas =>
+        canvas.id === activeCanvasId ? { ...canvas, shapes: newShapes } : canvas
+      )
+    );
+  };
+
+  // Update active canvas connections.
+  const handleConnectionsUpdate = (newConnections: Connection[]) => {
+    setCanvases(prev =>
+      prev.map(canvas =>
+        canvas.id === activeCanvasId ? { ...canvas, connections: newConnections } : canvas
+      )
+    );
+  };
+
+  // Update active canvas code.
+  const handleCodeUpdate = (newCode: string) => {
+    setCanvases(prev =>
+      prev.map(canvas =>
+        canvas.id === activeCanvasId ? { ...canvas, code: newCode } : canvas
+      )
+    );
+  };
+
+  // Add new object to active canvas.
+  const handleAddObject = (type: 'sensor' | 'output' | 'if') => {
+    let newShape: Shape;
     if (type === "sensor") {
-      setShapes((prev) => [
-        ...prev,
-        { id: shapeCounter++, type: "sensor", x: 200, y: 200 },
-      ]);
+      newShape = { id: shapeCounter.current++, type: "sensor", x: 200, y: 200 };
     } else if (type === "output") {
-      setShapes((prev) => [
-        ...prev,
-        { id: shapeCounter++, type: "output", x: 300, y: 300 },
-      ]);
+      newShape = { id: shapeCounter.current++, type: "output", x: 300, y: 300 };
     } else if (type === "if") {
-      setShapes((prev) => [
-        ...prev,
-        { id: shapeCounter++, type: "if", x: 400, y: 250 },
-      ]);
+      newShape = { id: shapeCounter.current++, type: "if", x: 400, y: 250 };
+    } else {
+      return; // Handle invalid type
+    }
+    handleShapesUpdate([...activeCanvas.shapes, newShape]);
+  };
+
+  // Function to add a new canvas, with a unique code snippet.
+  const addCanvas = () => {
+    const newId = canvases.length ? Math.max(...canvases.map(c => c.id)) + 1 : 1;
+    const newCanvas: CanvasData = {
+      id: newId,
+      name: `Canvas ${newId}`,
+      shapes: [],
+      connections: [],
+      code: `// Canvas ${newId} code
+function hello() {
+  console.log("Hello, Canvas ${newId}!");
+}`
+    };
+    setCanvases([...canvases, newCanvas]);
+    setActiveCanvasId(newId);
+  };
+
+  const removeCanvas = (id: number) => {
+    setCanvases(prev => prev.filter(c => c.id !== id));
+    setActiveCanvasId(canvases[0].id);
+  }
+
+  const renameCanvas = (id: number, newName: string) => {
+    setCanvases(prev => prev.map(c => c.id === id ? { ...c, name: newName } : c));
+  }
+
+  // Duplicate a canvas: create a copy with a new id and modified name.
+  const duplicateCanvas = (id: number) => {
+    const canvasToDuplicate = canvases.find((c) => c.id === id);
+    if (canvasToDuplicate) {
+      // Create a new unique id
+      const newId = canvases.length ? Math.max(...canvases.map(c => c.id)) + 1 : 1;
+      const duplicatedCanvas: CanvasData = {
+        ...canvasToDuplicate,
+        id: newId,
+        name: `${canvasToDuplicate.name} copy`,
+      };
+      // Insert the duplicated canvas after the original one
+      const index = canvases.findIndex((c) => c.id === id);
+      const updatedCanvases = [
+        ...canvases.slice(0, index + 1),
+        duplicatedCanvas,
+        ...canvases.slice(index + 1),
+      ];
+      setCanvases(updatedCanvases);
     }
   };
 
-  useEffect(() => {
-    if (!window.electron) return;
+  // Reorder canvases when a canvas tab is dragged and dropped.
+  const reorderCanvases = (startIndex: number, endIndex: number) => {
+    const updatedCanvases = Array.from(canvases);
+    const [removed] = updatedCanvases.splice(startIndex, 1);
+    updatedCanvases.splice(endIndex, 0, removed);
+    setCanvases(updatedCanvases);
+  };
+  
 
-    window.electron.ipcRenderer.send('app_version');
-    window.electron.ipcRenderer.on('app_version', (arg: any) => {
-      console.log('App version:', arg.version);
-    });
-
-    return () => {
-      window.electron.ipcRenderer.removeAllListeners('app_version');
-    };
-  }, []);
+  if (!activeCanvas) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <div className="min-h-[800px] min-w-[1200px] overflow-hidden">
+    <div className="h-screen min-w-[1200px] overflow-hidden">
       <Titlebar />
-      <div className="h-screen flex">
-        {/* Pass handleAddObject to the Sidebar */}
+      <div className="max-h-[97vh] h-full flex">
         <SideBar onAddObject={handleAddObject} />
-        <main className="flex-1 overflow-auto bg-white select-none flex flex-row">
-          {/* Pass canvas state via context to the Outlet */}
-          <Outlet context={{ shapes, connections, setShapes, setConnections }} />
+        <main className="flex-1 overflow-auto bg-white select-none flex flex-col">
+          {/* Pass active canvas data and functions via Outlet context */}
+          <Outlet context={{
+            shapes: activeCanvas.shapes,
+            connections: activeCanvas.connections,
+            setShapes: handleShapesUpdate,
+            setConnections: handleConnectionsUpdate,
+            handleAddObject: handleAddObject,
+            canvases: canvases,
+            activeCanvasId: activeCanvasId,
+            setActiveCanvasId: setActiveCanvasId,
+            addCanvas: addCanvas,
+            removeCanvas: removeCanvas,
+            renameCanvas: renameCanvas,
+            duplicateCanvas: duplicateCanvas,
+            reorderCanvases: reorderCanvases,
+            code: activeCanvas.code,
+            onCodeUpdate: handleCodeUpdate,
+          }} />
         </main>
       </div>
     </div>

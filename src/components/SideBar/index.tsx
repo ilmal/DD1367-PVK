@@ -9,9 +9,10 @@ interface MenuItem {
   onClick: () => void;
 }
 
-export interface SideBarProps {
-  onAddObject: (type: string) => void;
+interface SideBarProps {
+  onAddObject: (type: 'sensor' | 'output' | 'if') => void;
 }
+
 
 export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
 
@@ -25,76 +26,112 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
 
   const menuItems: MenuItem[] = [
     {
-      id: "canvas",
+      id: "explorer",
       icon: <LuFolder />,
-      label: "Canvas",
-      onClick: () => {setShowCanvasMenu((prev) => !prev); setSelectedMenuItem("canvas")},
+      label: "Explorer",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("explorer");
+      }
     },
     {
-      id: "Cool thing here",
+      id: "runSimulation",
       icon: <LuFastForward />,
-      label: "Cool thing here",
-      onClick: () => console.log("Cool thing here clicked"),
+      label: "Run Simulation",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("runSimulation");
+      }
     },
     {
-      id: "file",
+      id: "newCanvas",
       icon: <LuFile />,
-      label: "File",
-      onClick: () => console.log("File clicked"),
+      label: "New Canvas",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("newCanvas");
+      }
     },
     {
       id: "search",
       icon: <LuSearch />,
       label: "Search",
-      onClick: () => console.log("Search clicked"),
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("search");
+      }
     },
     {
       id: "database",
       icon: <LuDatabase />,
       label: "Database",
-      onClick: () => console.log("Database clicked"),
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("database");
+      }
     },
     {
-      id: "circuit",
+      id: "boardInterface",
       icon: <LuCircuitBoard />,
-      label: "Circuit",
-      onClick: () => console.log("Circuit clicked"),
+      label: "Board Interface",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("boardInterface");
+      }
     },
     {
-      id: "pull-request",
+      id: "versionControl",
       icon: <LuGitPullRequest />,
-      label: "Pull Request",
-      onClick: () => console.log("Pull Request clicked"),
+      label: "Version Control",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("versionControl");
+      }
     },
     {
-      id: "layout-grid",
+      id: "moduleHierarchy",
       icon: <LuLayoutGrid />,
-      label: "Grid Layout",
-      onClick: () => console.log("Grid Layout clicked"),
+      label: "Module Hierarchy",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("moduleHierarchy");
+      }
     },
     {
-      id: "receiver",
+      id: "registersAndMemory",
       icon: <LuRadioReceiver />,
-      label: "Receiver",
-      onClick: () => console.log("Receiver clicked"),
+      label: "Registers & Memory",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("registersAndMemory");
+      }
     },
     {
-      id: "computer",
+      id: "simulationViewer",
       icon: <LuComputer />,
-      label: "Computer",
-      onClick: () => console.log("Computer clicked"),
+      label: "Simulation Viewer",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("simulationViewer");
+      }
     },
     {
-      id: "server",
+      id: "testBench",
       icon: <LuServer />,
-      label: "Server",
-      onClick: () => console.log("Server clicked"),
+      label: "Test Bench",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("testBench");
+      }
     },
     {
-      id: "wrench",
+      id: "configure",
       icon: <LuWrench />,
-      label: "Wrench",
-      onClick: () => console.log("Wrench clicked"),
+      label: "Configure",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("configure");
+      }
     }
   ];
 
@@ -131,10 +168,10 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
           </ul>
         </nav>
       </aside>
-      {(showCanvasMenu && !collapsed) && (
+      {showCanvasMenu && (
         <div className="w-64 h-full transition-all duration-300">
-          {/* Pass the parent's onAddObject to CanvasMenu */}
-          <CanvasMenu onAddObject={onAddObject} />
+          {/* Pass the collapsed state to CanvasMenu */}
+          <CanvasMenu onAddObject={onAddObject} collapsed={collapsed} />
         </div>
       )}
     </div>

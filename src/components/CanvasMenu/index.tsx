@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 
 interface CanvasMenuProps {
-  onAddObject: (type: string) => void;
+  onAddObject: (type: 'sensor' | 'output' | 'if') => void;
+  collapsed?: boolean;
 }
 
 type CanvasComponent = {
-  type: string;
+  type: 'sensor' | 'output' | 'if';
   label: string;
 };
 
@@ -28,7 +29,7 @@ export const componentsData: ComponentCategory[] = [
   },
 ];
 
-export const CanvasMenu: React.FC<CanvasMenuProps> = ({ onAddObject }) => {
+export const CanvasMenu: React.FC<CanvasMenuProps> = ({ onAddObject, collapsed = false }) => {
   const [openCategories, setOpenCategories] = useState<{ [key: string]: boolean }>(
     () =>
       componentsData.reduce((acc, curr) => {

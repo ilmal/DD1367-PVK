@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { HashRouter, Route, Routes } from "react-router-dom";
-import { IndexPage } from "./pages";
+import { IndexPage } from "./pages/explorer";
 import { PopupPage } from "./pages/popup";
 import { Layout } from "./components/Layout";
 

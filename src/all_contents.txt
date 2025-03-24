@@ -8,16 +8,31 @@ This is the structure:
 │   │   └── index.tsx
 │   ├── CanvasMenu
 │   │   └── index.tsx
+│   ├── CanvasTabs
+│   │   └── index.tsx
 │   ├── Layout
 │   │   └── index.tsx
 │   ├── SideBar
+│   │   └── index.tsx
+│   ├── Terminal
 │   │   └── index.tsx
 │   └── Titlebar
 │       └── index.tsx
 ├── index.tsx
 ├── pages
-│   ├── index.tsx
-│   └── popup.tsx
+│   ├── boardInterface.tsx
+│   ├── configure.tsx
+│   ├── database.tsx
+│   ├── explorer.tsx
+│   ├── moduleHiarchy.tsx
+│   ├── newCanvas.tsx
+│   ├── popup.tsx
+│   ├── registersAndMemory.tsx
+│   ├── runSimulation.tsx
+│   ├── search.tsx
+│   ├── simulationViewer.tsx
+│   ├── testBench.tsx
+│   └── versionControl.tsx
 ├── react-app-env.d.ts
 ├── router.tsx
 ├── styles
@@ -29,7 +44,7 @@ This is the structure:
     └── global
         └── index.d.ts
 
-12 directories, 17 files
+14 directories, 30 files
 ----- ./styles/tailwind.css -----
 @tailwind base;
 @tailwind components;
@@ -120,70 +135,96 @@ export const PopupPage: FC = () => {
 };
 
 
------ ./pages/index.tsx -----
-import React, { FC, useState } from "react";
+----- ./pages/explorer.tsx -----
+import React, { FC } from "react";
+import { useOutletContext } from "react-router-dom";
 import { CanvasArea } from "../components/CanvasArea";
-import { CanvasMenu } from "../components/CanvasMenu";
+import { CanvasTabs } from "../components/CanvasTabs";
 
-interface Shape {
+interface Canvas {
   id: number;
-  type: "circle" | "rectangle";
-  x: number;
-  y: number;
-}
-interface Connection {
-  fromId: number;
-  toId: number;
+  name: string;
 }
 
-let shapeCounter = 3;
+interface OutletContextType {
+  shapes: any[]; // Replace 'any' with your Shape type if desired.
+  connections: any[];
+  setShapes: React.Dispatch<React.SetStateAction<any[]>>;
+  setConnections: React.Dispatch<React.SetStateAction<any[]>>;
+  handleAddObject: (type: string) => void;
+  canvases: Canvas[];
+  activeCanvasId: number;
+  setActiveCanvasId: (id: number) => void;
+  addCanvas: () => void;
+  removeCanvas: (id: number) => void;
+  renameCanvas: (id: number, newName: string) => void;
+  duplicateCanvas: (id: number) => void;
+  reorderCanvases: (startIndex: number, endIndex: number) => void;
+  code: string;
+  onCodeUpdate: (newCode: string) => void;
+}
 
 export const IndexPage: FC = () => {
-  const [shapes, setShapes] = useState<Shape[]>([
-    { id: 1, type: "circle", x: 150, y: 120 },
-    { id: 2, type: "rectangle", x: 350, y: 200 },
-  ]);
-  const [connections, setConnections] = useState<Connection[]>([]);
-
-  const handleAddObject = (type: string) => {
-    if (type === "circle") {
-      setShapes((prev) => [
-        ...prev,
-        { id: shapeCounter++, type: "circle", x: 200, y: 200 },
-      ]);
-    } else if (type === "rectangle") {
-      setShapes((prev) => [
-        ...prev,
-        { id: shapeCounter++, type: "rectangle", x: 300, y: 300 },
-      ]);
-    }
-  };
-
-  const handleConnectShapes = (fromId: number, toId: number) => {
-    setConnections((prev) => [...prev, { fromId, toId }]);
-  };
-
-  const handleShapesUpdate = (updated: Shape[]) => setShapes(updated);
-  const handleConnectionsUpdate = (updated: Connection[]) =>
-    setConnections(updated);
+  const {
+    shapes,
+    connections,
+    setShapes,
+    setConnections,
+    canvases,
+    activeCanvasId,
+    setActiveCanvasId,
+    addCanvas,
+    removeCanvas,
+    renameCanvas,
+    duplicateCanvas,
+    reorderCanvases,  
+    code,
+    onCodeUpdate,
+  } = useOutletContext<OutletContextType>();
 
   return (
-    <div className="w-full h-full flex">
-      {/* Canvas-specific menu */}
-      <CanvasMenu
-        onAddObject={handleAddObject}
-        onConnectShapes={handleConnectShapes}
+    <div className="w-full h-full flex flex-col">
+      {/* Tab bar for canvases */}
+      <CanvasTabs 
+        canvases={canvases} 
+        activeCanvasId={activeCanvasId} 
+        setActiveCanvasId={setActiveCanvasId} 
+        addCanvas={addCanvas} 
+        removeCanvas={(id) => {
+          removeCanvas(id);
+        }}
+        renameCanvas={(id, newName)=>{
+          renameCanvas(id, newName);
+        }}
+        duplicateCanvas={(id)=>{
+          duplicateCanvas(id)
+        }}
+        reorderCanvases={(startIndex, endIndex)=>{
+          reorderCanvases(startIndex, endIndex)
+        }}
       />
       {/* Canvas area */}
       <div className="flex-1 relative">
-        <CanvasArea
-          shapes={shapes}
-          connections={connections}
-          onShapesUpdate={handleShapesUpdate}
-          onConnectionsUpdate={handleConnectionsUpdate}
+        <CanvasArea 
+          shapes={shapes} 
+          connections={connections} 
+          onShapesUpdate={setShapes} 
+          onConnectionsUpdate={setConnections}
+          code={code}
+          onCodeUpdate={onCodeUpdate}
         />
       </div>
     </div>
+  );
+};
+
+
+----- ./pages/boardInterface.tsx -----
+import React, { FC } from "react";
+
+export const BoardInterface: FC = () => {
+  return (
+    <span>Looky here!</span>
   );
 };
 
@@ -194,7 +235,7 @@ export const IndexPage: FC = () => {
 ----- ./router.tsx -----
 import { FC } from "react";
 import { HashRouter, Route, Routes } from "react-router-dom";
-import { IndexPage } from "./pages";
+import { IndexPage } from "./pages/explorer";
 import { PopupPage } from "./pages/popup";
 import { Layout } from "./components/Layout";
 
@@ -212,42 +253,339 @@ export const Router: FC = () => {
 };
 
 
+----- ./components/Terminal/index.tsx -----
+import React, { useState, useRef, useEffect } from 'react';
+
+export const Terminal: React.FC = () => {
+  // Height states: current height and previous expanded height.
+  const [height, setHeight] = useState<number>(150);
+  const [expandedHeight, setExpandedHeight] = useState<number>(150);
+  // Dragging and collapse state.
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [collapsed, setCollapsed] = useState<boolean>(false);
+  const startYRef = useRef<number>(0);
+  const startHeightRef = useRef<number>(0);
+
+  // Terminal command and output state.
+  const [output, setOutput] = useState<string[]>([]);
+  const [command, setCommand] = useState<string>("");
+  const outputRef = useRef<HTMLDivElement>(null);
+
+  // Only allow dragging when not collapsed.
+  const onMouseDown = (e: React.MouseEvent) => {
+    if (collapsed) return;
+    setIsDragging(true);
+    startYRef.current = e.clientY;
+    startHeightRef.current = height;
+    e.preventDefault();
+  };
+
+  const onMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    const delta = startYRef.current - e.clientY;
+    const newHeight = startHeightRef.current + delta;
+    if (newHeight < 50) {
+      setHeight(50);
+    } else if (newHeight > 500) {
+      setHeight(500);
+    } else {
+      setHeight(newHeight);
+    }
+  };
+
+  const onMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    } else {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [isDragging]);
+
+  // Process a command and update terminal output.
+  const processCommand = (cmd: string) => {
+    const trimmed = cmd.trim();
+    if (trimmed === "") return;
+
+    let response = "";
+    if (trimmed === "help") {
+      response = "Available commands: help, echo <text>, date, clear";
+    } else if (trimmed.startsWith("echo ")) {
+      response = trimmed.substring(5);
+    } else if (trimmed === "date") {
+      response = new Date().toString();
+    } else if (trimmed === "clear") {
+      setOutput([]);
+      return;
+    } else {
+      response = `Command not found: ${trimmed}`;
+    }
+    setOutput(prev => [...prev, `$ ${trimmed}`, response]);
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      processCommand(command);
+      setCommand("");
+    }
+  };
+
+  // Auto-scroll to the bottom when new output is added.
+  useEffect(() => {
+    if (outputRef.current) {
+      outputRef.current.scrollTop = outputRef.current.scrollHeight;
+    }
+  }, [output]);
+
+  // Toggle collapse/expand. When collapsing, store the current height.
+  const toggleTerminal = () => {
+    if (collapsed) {
+      // Expand: restore previous height.
+      setHeight(expandedHeight);
+    } else {
+      // Collapse: store current height and reduce to header height.
+      setExpandedHeight(height);
+      setHeight(30);
+    }
+    setCollapsed(!collapsed);
+  };
+
+  return (
+    <div className="absolute bottom-0 left-0 right-0 bg-gray-900 text-white flex flex-col" style={{ height }}>
+      {/* Terminal header with drag handle and toggle button */}
+      <div
+        className="h-8 bg-gray-700 flex items-center justify-between px-2 cursor-row-resize"
+        onMouseDown={onMouseDown}
+      >
+        <span>Terminal</span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleTerminal();
+          }}
+          className="bg-gray-600 px-2 py-1 rounded text-sm"
+        >
+          {collapsed ? "Expand" : "Collapse"}
+        </button>
+      </div>
+      {/* Show output and input only when not collapsed */}
+      {!collapsed && (
+        <>
+          <div ref={outputRef} className="flex-1 p-2 overflow-auto font-mono text-sm">
+            {output.map((line, index) => (
+              <div key={index}>{line}</div>
+            ))}
+          </div>
+          <div className="p-2 border-t border-gray-700 flex items-center">
+            <span className="mr-2">$</span>
+            <input
+              type="text"
+              className="bg-transparent outline-none w-full"
+              value={command}
+              onChange={(e) => setCommand(e.target.value)}
+              onKeyDown={onKeyDown}
+            />
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+
 ----- ./components/SideBar/index.tsx -----
 import { FC, useState } from "react";
+import { CanvasMenu } from "../CanvasMenu";
+import { LuFolder, LuFastForward, LuFile, LuSearch, LuDatabase, LuCircuitBoard, LuGitPullRequest, LuLayoutGrid, LuRadioReceiver, LuComputer, LuServer, LuWrench } from 'react-icons/lu';
+
+interface MenuItem {
+  id: string;
+  icon: JSX.Element | string;
+  label: string;
+  onClick: () => void;
+}
+
+interface SideBarProps {
+  onAddObject: (type: 'sensor' | 'output' | 'if') => void;
+}
 
 
-export const SideBar: FC = () => {
+export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
+
   const [collapsed, setCollapsed] = useState(false);
+  const [showCanvasMenu, setShowCanvasMenu] = useState(false);
+  const [selectedMenuItem, setSelectedMenuItem] = useState<string | null>(null);
 
-	return (
-    <aside
-    className={`bg-gray-800 text-white flex flex-col transition-all duration-300
-      ${collapsed ? "w-16" : "w-64"}
-    `}
-  >
-    <div className="p-2 flex justify-end">
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="bg-gray-700 px-2 py-1 rounded hover:bg-gray-600 focus:outline-none"
+  const handleAddObject = (type: string) => {
+    console.log("Add object:", type);
+  };
+
+  const menuItems: MenuItem[] = [
+    {
+      id: "explorer",
+      icon: <LuFolder />,
+      label: "Explorer",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("explorer");
+      }
+    },
+    {
+      id: "runSimulation",
+      icon: <LuFastForward />,
+      label: "Run Simulation",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("runSimulation");
+      }
+    },
+    {
+      id: "newCanvas",
+      icon: <LuFile />,
+      label: "New Canvas",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("newCanvas");
+      }
+    },
+    {
+      id: "search",
+      icon: <LuSearch />,
+      label: "Search",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("search");
+      }
+    },
+    {
+      id: "database",
+      icon: <LuDatabase />,
+      label: "Database",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("database");
+      }
+    },
+    {
+      id: "boardInterface",
+      icon: <LuCircuitBoard />,
+      label: "Board Interface",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("boardInterface");
+      }
+    },
+    {
+      id: "versionControl",
+      icon: <LuGitPullRequest />,
+      label: "Version Control",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("versionControl");
+      }
+    },
+    {
+      id: "moduleHierarchy",
+      icon: <LuLayoutGrid />,
+      label: "Module Hierarchy",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("moduleHierarchy");
+      }
+    },
+    {
+      id: "registersAndMemory",
+      icon: <LuRadioReceiver />,
+      label: "Registers & Memory",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("registersAndMemory");
+      }
+    },
+    {
+      id: "simulationViewer",
+      icon: <LuComputer />,
+      label: "Simulation Viewer",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("simulationViewer");
+      }
+    },
+    {
+      id: "testBench",
+      icon: <LuServer />,
+      label: "Test Bench",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("testBench");
+      }
+    },
+    {
+      id: "configure",
+      icon: <LuWrench />,
+      label: "Configure",
+      onClick: () => {
+        setShowCanvasMenu((prev) => !prev);
+        setSelectedMenuItem("configure");
+      }
+    }
+  ];
+
+  return (
+    <div className="flex">
+      <aside
+        className={`bg-black text-white flex flex-col transition-all duration-300 ${
+          collapsed ? "w-16" : "w-64"
+        }`}
       >
-        ☰
-      </button>
+        <div className="p-2 flex justify-end">
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="bg-black px-2 py-1 rounded hover:bg-gray-900 focus:outline-none"
+          >
+            ☰
+          </button>
+        </div>
+        <nav className="flex-1 p-2">
+          <ul className="space-y-2">
+            {menuItems.map((item) => (
+              <li key={item.id}>
+                <button
+                  onClick={item.onClick}
+                  className={`flex items-center p-2 rounded w-full focus:outline-none ${
+                    item.id === selectedMenuItem ? "bg-gray-700" : "hover:bg-gray-900"
+                  }`}
+                >
+                  <span className="text-xl">{item.icon}</span>
+                  {!collapsed && <span className="ml-2">{item.label}</span>}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </aside>
+      {showCanvasMenu && (
+        <div className="w-64 h-full transition-all duration-300">
+          {/* Pass the collapsed state to CanvasMenu */}
+          <CanvasMenu onAddObject={onAddObject} collapsed={collapsed} />
+        </div>
+      )}
     </div>
-    <nav className="flex-1 p-2">
-      {/* Navigationslänkar eller menyinnehåll */}
-      <ul className="space-y-2">
-        <li className="hover:bg-gray-700 p-2 rounded">Meny 1</li>
-        <li className="hover:bg-gray-700 p-2 rounded">Meny 2</li>
-        <li className="hover:bg-gray-700 p-2 rounded">Meny 3</li>
-      </ul>
-    </nav>
-  </aside>
-);
+  );
 };
 
 
 ----- ./components/CanvasArea/index.tsx -----
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import ReactFlow, {
   ReactFlowProvider,
   MiniMap,
@@ -256,13 +594,15 @@ import ReactFlow, {
   Node,
   Edge,
   NodeTypes,
-  Connection as FlowConnection
+  Connection as FlowConnection,
 } from 'reactflow';
+import { Handle, Position } from 'reactflow';
 import 'reactflow/dist/style.css';
+import { Terminal } from '../Terminal';
 
 interface Shape {
   id: number;
-  type: "circle" | "rectangle";
+  type: 'sensor' | 'output' | 'if';
   x: number;
   y: number;
 }
@@ -277,43 +617,45 @@ interface Props {
   connections: CustomConnection[];
   onShapesUpdate: (updated: Shape[]) => void;
   onConnectionsUpdate: (updated: CustomConnection[]) => void;
+  code: string;
+  onCodeUpdate: (newCode: string) => void;
 }
 
-const LogicNode = ({ data }: any) => (
-  <div
-    style={{
-      padding: "10px",
-      border: "2px solid #333",
-      borderRadius: "8px",
-      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-      color: "white",
-      minWidth: "100px",
-      textAlign: "center",
-    }}
-  >
-    {data.label || "Logic Node"}
+// Sensor node: a device with a left target and right source handle.
+const SensorNode = ({ data }: any) => (
+  <div style={{ border: '1px solid #444', borderRadius: '4px', backgroundColor: '#0A0', color: 'white', padding: '8px', fontFamily: 'monospace', minWidth: '120px' }}>
+    <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
+    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Sensor</div>
+    <div>{data.label || "Temperature Sensor"}</div>
+    <Handle type="source" position={Position.Right} style={{ background: '#555' }} />
   </div>
 );
 
-const DataNode = ({ data }: any) => (
-  <div
-    style={{
-      padding: "10px",
-      border: "2px solid #333",
-      borderRadius: "8px",
-      background: "linear-gradient(135deg, #f6d365 0%, #fda085 100%)",
-      color: "white",
-      minWidth: "100px",
-      textAlign: "center",
-    }}
-  >
-    {data.label || "Data Node"}
+// Output node: a device with a left target and right source handle.
+const OutputNode = ({ data }: any) => (
+  <div style={{ border: '1px solid #444', borderRadius: '4px', backgroundColor: '#007acc', color: 'white', padding: '8px', fontFamily: 'monospace', minWidth: '120px' }}>
+    <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
+    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Output</div>
+    <div>{data.label || "Display Output"}</div>
+    <Handle type="source" position={Position.Right} style={{ background: '#555' }} />
+  </div>
+);
+
+// If node: with one target handle on left and two source handles for true/false branches.
+const IfNode = ({ data }: any) => (
+  <div style={{ border: '1px solid #444', borderRadius: '4px', backgroundColor: '#ffcc00', color: '#333', padding: '8px', fontFamily: 'monospace', minWidth: '140px' }}>
+    <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
+    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>If Condition</div>
+    <div>{data.label || "if (x > 10)"}</div>
+    <Handle type="source" position={Position.Right} id="true" style={{ top: '30%', background: '#555' }} />
+    <Handle type="source" position={Position.Right} id="false" style={{ top: '70%', background: '#555' }} />
   </div>
 );
 
 const nodeTypes: NodeTypes = {
-  logic: LogicNode,
-  data: DataNode,
+  sensor: SensorNode,
+  output: OutputNode,
+  if: IfNode,
 };
 
 export const CanvasArea: React.FC<Props> = ({
@@ -321,20 +663,35 @@ export const CanvasArea: React.FC<Props> = ({
   connections,
   onShapesUpdate,
   onConnectionsUpdate,
+  code,
+  onCodeUpdate,
 }) => {
+  // Mode state: "canvas", "code", "diagram"
+  const [mode, setMode] = useState<"canvas" | "code" | "diagram">("canvas");
+
+  // Map shapes to ReactFlow nodes.
   const nodes: Node[] = shapes.map((shape) => ({
     id: shape.id.toString(),
     position: { x: shape.x, y: shape.y },
-    data: { label: shape.type === "circle" ? "Logic Node" : "Data Node" },
-    type: shape.type === "circle" ? "logic" : "data",
+    data: {
+      label:
+        shape.type === 'sensor'
+          ? "Temperature Sensor"
+          : shape.type === 'output'
+          ? "Display Output"
+          : "if (x > 10)",
+    },
+    type: shape.type,
   }));
 
+  // Map connections to edges.
   const edges: Edge[] = connections.map((conn) => ({
     id: `e${conn.fromId}-${conn.toId}`,
     source: conn.fromId.toString(),
     target: conn.toId.toString(),
+    type: 'smoothstep',
     animated: true,
-    style: { stroke: "black", strokeWidth: 2 },
+    style: { stroke: '#888', strokeWidth: 2 },
   }));
 
   const onNodeDragStop = useCallback(
@@ -352,37 +709,99 @@ export const CanvasArea: React.FC<Props> = ({
 
   const onConnect = useCallback(
     (connection: FlowConnection) => {
-      // Add null checks and validation
-      if (!connection.source || !connection.target) {
-        console.warn('Invalid connection attempt');
-        return;
-      }
-  
+      if (!connection.source || !connection.target) return;
       const newConnection = {
         fromId: parseInt(connection.source),
-        toId: parseInt(connection.target)
+        toId: parseInt(connection.target),
       };
-      
       onConnectionsUpdate([...connections, newConnection]);
     },
     [connections, onConnectionsUpdate]
   );
-  
+
+  // Remove extra node if found (left unchanged)
+  const xpath = '/html/body/div/div/div[2]/main/div/div/div/div/div[4]';
+  const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+  const nodeFound = result.singleNodeValue;
+  if (nodeFound && nodeFound.parentNode) {
+    nodeFound.parentNode.removeChild(nodeFound);
+  }
+
+  // Render the mode switcher in the top left corner of the canvas area.
+  const renderModeSwitcher = () => (
+    <div className="absolute top-0 right-0 z-10 flex flex-col space-y-2 p-2">
+      <button
+        className={`px-3 py-1 rounded ${mode === "canvas" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"}`}
+        onClick={() => setMode("canvas")}
+      >
+        Canvas
+      </button>
+      <button
+        className={`px-3 py-1 rounded ${mode === "code" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"}`}
+        onClick={() => setMode("code")}
+      >
+        Code
+      </button>
+      <button
+        className={`px-3 py-1 rounded ${mode === "diagram" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"}`}
+        onClick={() => setMode("diagram")}
+      >
+        Diagram
+      </button>
+    </div>
+  );
+
+  // Render content based on selected mode.
+  const renderContent = () => {
+    switch(mode) {
+      case "canvas":
+        return (
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            onNodeDragStop={onNodeDragStop}
+            onConnect={onConnect}
+            fitView
+          >
+            <MiniMap nodeColor={(node) => {
+              if (node.type === 'sensor') return '#0A0';
+              if (node.type === 'output') return '#007acc';
+              if (node.type === 'if') return '#ffcc00';
+              return '#eee';
+            }} />
+            <Controls />
+            <Background />
+          </ReactFlow>
+        );
+      case "code":
+        return (
+          <div className="w-full h-full flex items-center justify-center bg-gray-50">
+            <textarea
+              className="bg-black text-green-400 p-4 rounded w-11/12 h-[80vh] resize-none focus:outline-none"
+              value={code}
+              onChange={(e) => onCodeUpdate(e.target.value)}
+            />
+          </div>
+        );
+      case "diagram":
+        return (
+          <div className="w-full h-full flex items-center justify-center bg-white">
+            <p className="text-gray-500 text-xl">Diagram mode - No idea what this is :/</p>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <ReactFlowProvider>
-      <div style={{ width: "100%", height: "100%" }}>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          nodeTypes={nodeTypes}
-          onNodeDragStop={onNodeDragStop}
-          onConnect={onConnect}
-          fitView
-        >
-          <MiniMap />
-          <Controls />
-          <Background />
-        </ReactFlow>
+      <div className="w-full h-full relative">
+        {renderModeSwitcher()}
+        {renderContent()}
+        {/* Add the terminal interface */}
+        <Terminal />
       </div>
     </ReactFlowProvider>
   );
@@ -390,44 +809,393 @@ export const CanvasArea: React.FC<Props> = ({
 
 
 ----- ./components/Layout/index.tsx -----
-// components/Layout/index.tsx
-import React, { FC, useEffect } from 'react';
+import React, { FC, useEffect, useState, useRef } from 'react';
 import { Outlet } from 'react-router-dom';
-import { Titlebar } from '../Titlebar';
 import { SideBar } from '../SideBar';
+import { Titlebar } from '../Titlebar';
+import { renameSync } from 'fs';
 
-declare global {
-  interface Window {
-    electron: any;
-  }
+
+export interface Shape {
+  id: number;
+  type: 'sensor' | 'output' | 'if';
+  x: number;
+  y: number;
+}
+
+export interface Connection {
+  fromId: number;
+  toId: number;
+}
+
+interface Canvas {
+  id: number;
+  name: string;
+}
+
+interface CanvasData {
+  id: number;
+  name: string;
+  shapes: Shape[];
+  connections: Connection[];
+  code: string;
 }
 
 export const Layout: FC = () => {
-  useEffect(() => {
-    if (!window.electron) return;
+  // Initialize canvases state with one default canvas, including a code snippet.
+  const [canvases, setCanvases] = useState<CanvasData[]>([
+    {
+      id: 1,
+      name: "Canvas 1",
+      shapes: [
+        { id: 1, type: "sensor", x: 150, y: 120 },
+        { id: 2, type: "output", x: 350, y: 200 },
+      ],
+      connections: [],
+      code: `// Canvas 1 code
+function hello() {
+  console.log("Hello, Canvas 1!");
+}`
+    },
+  ]);
+  const [activeCanvasId, setActiveCanvasId] = useState<number>(1);
+  
+  // Use a ref for shapeCounter to ensure unique shape IDs.
+  const shapeCounter = useRef(3);
 
-    window.electron.ipcRenderer.send('app_version');
-    window.electron.ipcRenderer.on('app_version', (arg: any) => {
-      console.log('App version:', arg.version);
-    });
+  // Get active canvas data.
+  const activeCanvas = canvases.find(c => c.id === activeCanvasId);
+  if (!activeCanvas) return null;
 
-    return () => {
-      window.electron.ipcRenderer.removeAllListeners('app_version');
+  // Update active canvas shapes.
+  const handleShapesUpdate = (newShapes: Shape[]) => {
+    setCanvases(prev =>
+      prev.map(canvas =>
+        canvas.id === activeCanvasId ? { ...canvas, shapes: newShapes } : canvas
+      )
+    );
+  };
+
+  // Update active canvas connections.
+  const handleConnectionsUpdate = (newConnections: Connection[]) => {
+    setCanvases(prev =>
+      prev.map(canvas =>
+        canvas.id === activeCanvasId ? { ...canvas, connections: newConnections } : canvas
+      )
+    );
+  };
+
+  // Update active canvas code.
+  const handleCodeUpdate = (newCode: string) => {
+    setCanvases(prev =>
+      prev.map(canvas =>
+        canvas.id === activeCanvasId ? { ...canvas, code: newCode } : canvas
+      )
+    );
+  };
+
+  // Add new object to active canvas.
+  const handleAddObject = (type: 'sensor' | 'output' | 'if') => {
+    let newShape: Shape;
+    if (type === "sensor") {
+      newShape = { id: shapeCounter.current++, type: "sensor", x: 200, y: 200 };
+    } else if (type === "output") {
+      newShape = { id: shapeCounter.current++, type: "output", x: 300, y: 300 };
+    } else if (type === "if") {
+      newShape = { id: shapeCounter.current++, type: "if", x: 400, y: 250 };
+    } else {
+      return; // Handle invalid type
+    }
+    handleShapesUpdate([...activeCanvas.shapes, newShape]);
+  };
+
+  // Function to add a new canvas, with a unique code snippet.
+  const addCanvas = () => {
+    const newId = canvases.length ? Math.max(...canvases.map(c => c.id)) + 1 : 1;
+    const newCanvas: CanvasData = {
+      id: newId,
+      name: `Canvas ${newId}`,
+      shapes: [],
+      connections: [],
+      code: `// Canvas ${newId} code
+function hello() {
+  console.log("Hello, Canvas ${newId}!");
+}`
     };
-  }, []);
+    setCanvases([...canvases, newCanvas]);
+    setActiveCanvasId(newId);
+  };
+
+  const removeCanvas = (id: number) => {
+    setCanvases(prev => prev.filter(c => c.id !== id));
+    setActiveCanvasId(canvases[0].id);
+  }
+
+  const renameCanvas = (id: number, newName: string) => {
+    setCanvases(prev => prev.map(c => c.id === id ? { ...c, name: newName } : c));
+  }
+
+  // Duplicate a canvas: create a copy with a new id and modified name.
+  const duplicateCanvas = (id: number) => {
+    const canvasToDuplicate = canvases.find((c) => c.id === id);
+    if (canvasToDuplicate) {
+      // Create a new unique id
+      const newId = canvases.length ? Math.max(...canvases.map(c => c.id)) + 1 : 1;
+      const duplicatedCanvas: CanvasData = {
+        ...canvasToDuplicate,
+        id: newId,
+        name: `${canvasToDuplicate.name} copy`,
+      };
+      // Insert the duplicated canvas after the original one
+      const index = canvases.findIndex((c) => c.id === id);
+      const updatedCanvases = [
+        ...canvases.slice(0, index + 1),
+        duplicatedCanvas,
+        ...canvases.slice(index + 1),
+      ];
+      setCanvases(updatedCanvases);
+    }
+  };
+
+  // Reorder canvases when a canvas tab is dragged and dropped.
+  const reorderCanvases = (startIndex: number, endIndex: number) => {
+    const updatedCanvases = Array.from(canvases);
+    const [removed] = updatedCanvases.splice(startIndex, 1);
+    updatedCanvases.splice(endIndex, 0, removed);
+    setCanvases(updatedCanvases);
+  };
+  
+
+  if (!activeCanvas) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <div className="min-h-[800px] min-w-[1200px] overflow-hidden">
+    <div className="h-screen min-w-[1200px] overflow-hidden">
       <Titlebar />
-      <div className="h-screen flex">
-        <SideBar />
-        <main className="flex-1 overflow-auto bg-white select-none flex flex-row">
-          <Outlet />
+      <div className="max-h-[97vh] h-full flex">
+        <SideBar onAddObject={handleAddObject} />
+        <main className="flex-1 overflow-auto bg-white select-none flex flex-col">
+          {/* Pass active canvas data and functions via Outlet context */}
+          <Outlet context={{
+            shapes: activeCanvas.shapes,
+            connections: activeCanvas.connections,
+            setShapes: handleShapesUpdate,
+            setConnections: handleConnectionsUpdate,
+            handleAddObject: handleAddObject,
+            canvases: canvases,
+            activeCanvasId: activeCanvasId,
+            setActiveCanvasId: setActiveCanvasId,
+            addCanvas: addCanvas,
+            removeCanvas: removeCanvas,
+            renameCanvas: renameCanvas,
+            duplicateCanvas: duplicateCanvas,
+            reorderCanvases: reorderCanvases,
+            code: activeCanvas.code,
+            onCodeUpdate: handleCodeUpdate,
+          }} />
         </main>
       </div>
     </div>
   );
 };
+
+
+----- ./components/CanvasTabs/index.tsx -----
+import React, { useState, useEffect, useRef } from "react";
+import { IoCloseOutline } from "react-icons/io5";
+
+interface Canvas {
+  id: number;
+  name: string;
+}
+
+interface CanvasTabsProps {
+  canvases: Canvas[];
+  activeCanvasId: number;
+  setActiveCanvasId: (id: number) => void;
+  addCanvas: () => void;
+  removeCanvas: (id: number) => void;
+  renameCanvas: (id: number, newName: string) => void;
+  duplicateCanvas: (id: number) => void;
+  reorderCanvases: (startIndex: number, endIndex: number) => void;
+}
+
+export const CanvasTabs: React.FC<CanvasTabsProps> = ({
+  canvases,
+  activeCanvasId,
+  setActiveCanvasId,
+  addCanvas,
+  removeCanvas,
+  renameCanvas,
+  duplicateCanvas,
+  reorderCanvases,
+}) => {
+  // State for context menu and renaming
+  const [editingCanvasId, setEditingCanvasId] = useState<number | null>(null);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newName, setNewName] = useState("");
+  
+  // useRef for the dropdown menu (used to detect outside clicks)
+  const menuRef = useRef<HTMLDivElement>(null);
+  
+  // useRef to store the index of the dragged tab
+  const draggedTabIndex = useRef<number | null>(null);
+
+  // Close the menu if clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setEditingCanvasId(null);
+        setIsRenaming(false);
+      }
+    };
+    if (editingCanvasId !== null) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [editingCanvasId]);
+
+  const handleRenameSubmit = () => {
+    if (editingCanvasId !== null && newName.trim() !== "") {
+      renameCanvas(editingCanvasId, newName.trim());
+    }
+    setEditingCanvasId(null);
+    setIsRenaming(false);
+  };
+
+  return (
+    <div className="flex items-center border-b border-gray-300 bg-gray-200">
+      {canvases.map((canvas, index) => (
+        <div
+          key={canvas.id}
+          draggable
+          onDragStart={(e) => {
+            draggedTabIndex.current = index;
+          }}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            if (
+              draggedTabIndex.current !== null &&
+              draggedTabIndex.current !== index
+            ) {
+              reorderCanvases(draggedTabIndex.current, index);
+            }
+            draggedTabIndex.current = null;
+          }}
+          className={`relative flex min-w-fit px-3 py-2 cursor-pointer select-none ${
+            canvas.id === activeCanvasId
+              ? "bg-white border-t border-l border-r rounded-t shadow"
+              : "bg-gray-200 hover:bg-gray-300"
+          }`}
+          onClick={() => setActiveCanvasId(canvas.id)}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            // Toggle context menu for this canvas
+            setEditingCanvasId(canvas.id === editingCanvasId ? null : canvas.id);
+            setIsRenaming(false);
+          }}
+        >
+          {canvas.name}
+          {/* Close button */}
+          <span
+            onClick={(e) => {
+              e.stopPropagation();
+              removeCanvas(canvas.id);
+            }}
+            className="ml-2 p-1 text-gray-500 hover:text-red-500 hover:bg-gray-100 rounded-full"
+            title="Delete canvas"
+          >
+            <IoCloseOutline className="text-sm" />
+          </span>
+
+          {/* Dropdown Context Menu */}
+          {editingCanvasId === canvas.id && (
+            <div
+              ref={menuRef}
+              className="absolute top-full left-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="py-1">
+                {isRenaming ? (
+                  <div className="px-4 py-2">
+                    <input
+                      type="text"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      className="border rounded px-2 py-1 w-full text-sm"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleRenameSubmit();
+                        } else if (e.key === "Escape") {
+                          setEditingCanvasId(null);
+                          setIsRenaming(false);
+                        }
+                      }}
+                    />
+                    <div className="flex justify-end mt-2">
+                      <button
+                        onClick={() => {
+                          setEditingCanvasId(null);
+                          setIsRenaming(false);
+                        }}
+                        className="text-xs text-gray-500 hover:text-gray-700 mr-2"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleRenameSubmit}
+                        className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => {
+                        setNewName(canvas.name);
+                        setIsRenaming(true);
+                      }}
+                    >
+                      Rename
+                    </div>
+                    <div
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => {
+                        duplicateCanvas(canvas.id);
+                        setEditingCanvasId(null);
+                      }}
+                    >
+                      Duplicate
+                    </div>
+                    <div
+                      className="flex items-center px-4 py-2 text-sm text-red-700 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => {
+                        removeCanvas(canvas.id);
+                        setEditingCanvasId(null);
+                      }}
+                    >
+                      Delete
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+      {/* Area to add a new canvas on double click */}
+      <div className="w-full h-full" onDoubleClick={addCanvas} />
+    </div>
+  );
+};
+
 
 ----- ./components/Titlebar/index.tsx -----
 // components/Titlebar/index.tsx
@@ -473,7 +1241,7 @@ export const Titlebar: FC = () => {
   const onQuit = () => window.electron?.ipcRenderer.send('quit-app');
 
   return (
-    <div className="title-bar sticky top-0 select-none flex flex-row">
+    <div className="h-[2vh] title-bar sticky top-0 select-none flex flex-row">
       <div className="menu-button-container">
         <img
           id="icon"
@@ -513,35 +1281,84 @@ export const Titlebar: FC = () => {
 };
 
 ----- ./components/CanvasMenu/index.tsx -----
-import React from "react";
+import React, { useState } from "react";
 
 interface CanvasMenuProps {
-  onAddObject: (type: string) => void;
-  onConnectShapes: (fromId: number, toId: number) => void;
+  onAddObject: (type: 'sensor' | 'output' | 'if') => void;
+  collapsed?: boolean;
 }
 
-export const CanvasMenu: React.FC<CanvasMenuProps> = ({ onAddObject, onConnectShapes }) => {
+type CanvasComponent = {
+  type: 'sensor' | 'output' | 'if';
+  label: string;
+};
+
+type ComponentCategory = {
+  category: string;
+  components: CanvasComponent[];
+};
+
+export const componentsData: ComponentCategory[] = [
+  {
+    category: "Sensors",
+    components: [{ type: "sensor", label: "Add Sensor" }],
+  },
+  {
+    category: "Logic",
+    components: [
+      { type: "if", label: "Add If" },
+      { type: "output", label: "Add Output" },
+    ],
+  },
+];
+
+export const CanvasMenu: React.FC<CanvasMenuProps> = ({ onAddObject, collapsed = false }) => {
+  const [openCategories, setOpenCategories] = useState<{ [key: string]: boolean }>(
+    () =>
+      componentsData.reduce((acc, curr) => {
+        acc[curr.category] = true; // Open all categories by default
+        return acc;
+      }, {} as { [key: string]: boolean })
+  );
+
+  const toggleCategory = (category: string) => {
+    setOpenCategories((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
+  };
+
   return (
-    <aside className="w-64 bg-white text-gray-800 p-4 flex flex-col">
-      <h2 className="text-lg mb-4">Objects</h2>
-      <button
-        onClick={() => onAddObject("circle")}
-        className="bg-gray-700 text-white rounded mb-2 p-2 hover:bg-gray-600"
-      >
-        Add Circle
-      </button>
-      <button
-        onClick={() => onAddObject("rectangle")}
-        className="bg-gray-700 text-white rounded mb-2 p-2 hover:bg-gray-600"
-      >
-        Add Rectangle
-      </button>
-      <button
-        onClick={() => onConnectShapes(1, 2)}
-        className="bg-gray-700 text-white rounded mb-2 p-2 hover:bg-gray-600"
-      >
-        Connect #1 & #2
-      </button>
+    <aside className="bg-black h-full w-64 p-4">
+      <div className="bg-white rounded shadow p-4">
+        <h2 className="text-xl font-semibold mb-4">Components</h2>
+        {componentsData.map((cat) => (
+          <div key={cat.category} className="mb-3">
+            <button
+              onClick={() => toggleCategory(cat.category)}
+              className="w-full flex items-center justify-between text-left focus:outline-none"
+            >
+              <span className="font-medium">{cat.category}</span>
+              <span className="transition-transform duration-200 transform">
+                {openCategories[cat.category] ? "▼" : "►"}
+              </span>
+            </button>
+            {openCategories[cat.category] && (
+              <div className="mt-2 pl-4">
+                {cat.components.map((component) => (
+                  <button
+                    key={component.type}
+                    onClick={() => onAddObject(component.type)}
+                    className="w-full text-left p-2 border border-gray-300 rounded mb-2 hover:bg-gray-100 focus:outline-none"
+                  >
+                    {component.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </aside>
   );
 };

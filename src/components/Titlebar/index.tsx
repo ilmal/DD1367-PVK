@@ -41,7 +41,7 @@ export const Titlebar: FC = () => {
   const onQuit = () => window.electron?.ipcRenderer.send('quit-app');
 
   return (
-    <div className="title-bar sticky top-0 select-none flex flex-row">
+    <div className="h-[2vh] title-bar sticky top-0 select-none flex flex-row">
       <div className="menu-button-container">
         <img
           id="icon"
