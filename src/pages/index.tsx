@@ -20,8 +20,13 @@ export const IndexPage: FC = () => {
           shapes={shapes}
           connections={connections}
           onShapesUpdate={setShapes}
-          onConnectionsUpdate={setConnections}
-        />
+          onConnectionsUpdate={setConnections} code={""} onCodeUpdate={function (code: string): void {
+            throw new Error("Function not implemented.");
+          } } terminalHeight={0} isTerminalCollapsed={false} setTerminalHeight={function (height: number): void {
+            throw new Error("Function not implemented.");
+          } } setIsTerminalCollapsed={function (collapsed: boolean): void {
+            throw new Error("Function not implemented.");
+          } }        />
       </div>
     </div>
   );

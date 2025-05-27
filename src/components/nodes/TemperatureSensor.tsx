@@ -8,6 +8,8 @@ interface TemperatureSensorProps {
       properties: any;
     };
     unit?: 'Celsius' | 'Kelvin';
+    onMouseEnter: () => void;
+    onMouseLeave: () => void;
   };
 }
 
@@ -18,6 +20,8 @@ const TemperatureSensor: React.FC<TemperatureSensorProps> = ({ data }) => {
 
   return (
     <div
+      onMouseEnter={data.onMouseEnter}
+      onMouseLeave={data.onMouseLeave}
       style={{
         backgroundColor: '#fee2e2', // Light red background
         padding: '12px',

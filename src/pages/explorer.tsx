@@ -68,13 +68,16 @@ export const IndexPage: FC = () => {
       {/* Canvas area */}
       <div className="flex-1 relative">
         <CanvasArea 
-          shapes={shapes} 
-          connections={connections} 
-          onShapesUpdate={setShapes} 
+          shapes={shapes}
+          connections={connections}
+          onShapesUpdate={setShapes}
           onConnectionsUpdate={setConnections}
           code={code}
-          onCodeUpdate={onCodeUpdate}
-        />
+          onCodeUpdate={onCodeUpdate} terminalHeight={0} isTerminalCollapsed={false} setTerminalHeight={function (height: number): void {
+            throw new Error("Function not implemented.");
+          } } setIsTerminalCollapsed={function (collapsed: boolean): void {
+            throw new Error("Function not implemented.");
+          } }        />
       </div>
     </div>
   );

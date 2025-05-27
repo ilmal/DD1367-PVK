@@ -12,6 +12,16 @@ This is the structure:
 │   │   └── index.tsx
 │   ├── Layout
 │   │   └── index.tsx
+│   ├── nodes
+│   │   ├── IfNode.tsx
+│   │   ├── OutputNode.tsx
+│   │   ├── PortInterface.tsx
+│   │   ├── SensorNode.tsx
+│   │   ├── TemperatureSensor.tsx
+│   │   └── __tests__
+│   │       ├── IfNode.test.tsx
+│   │       ├── OutputNode.test.tsx
+│   │       └── SensorNode.test.tsx
 │   ├── SideBar
 │   │   └── index.tsx
 │   ├── Terminal
@@ -24,7 +34,8 @@ This is the structure:
 │   ├── configure.tsx
 │   ├── database.tsx
 │   ├── explorer.tsx
-│   ├── moduleHiarchy.tsx
+│   ├── index.tsx
+│   ├── moduleHierarchy.tsx
 │   ├── newCanvas.tsx
 │   ├── popup.tsx
 │   ├── registersAndMemory.tsx
@@ -44,7 +55,7 @@ This is the structure:
     └── global
         └── index.d.ts
 
-14 directories, 30 files
+16 directories, 39 files
 ----- ./styles/tailwind.css -----
 @tailwind base;
 @tailwind components;
@@ -125,6 +136,76 @@ This is the structure:
 ::-webkit-scrollbar-thumb:hover {
 	background: #555;
 }
+
+
+----- ./pages/newCanvas.tsx -----
+import React, { FC } from "react";
+
+export const NewCanvas: FC = () => {
+  return (
+    <span>Looky here!</span>
+  );
+};
+
+
+----- ./pages/configure.tsx -----
+import React, { FC } from "react";
+
+export const Configure: FC = () => {
+  return (
+    <span>Looky here!</span>
+  );
+};
+
+
+----- ./pages/testBench.tsx -----
+import React, { FC } from "react";
+
+export const TestBench: FC = () => {
+  return (
+    <span>Looky here!</span>
+  );
+};
+
+
+----- ./pages/registersAndMemory.tsx -----
+import React, { FC } from "react";
+
+export const RegistersAndMemory: FC = () => {
+  return (
+    <span>Looky here!</span>
+  );
+};
+
+
+----- ./pages/runSimulation.tsx -----
+import React, { FC } from "react";
+
+export const RunSimulation: FC = () => {
+  return (
+    <span>Looky here!</span>
+  );
+};
+
+
+----- ./pages/versionControl.tsx -----
+import React, { FC } from "react";
+
+export const VersionControl: FC = () => {
+  return (
+    <span>Looky here!</span>
+  );
+};
+
+
+----- ./pages/simulationViewer.tsx -----
+import React, { FC } from "react";
+
+export const SimulationViewer: FC = () => {
+  return (
+    <span>Looky here!</span>
+  );
+};
 
 
 ----- ./pages/popup.tsx -----
@@ -219,6 +300,67 @@ export const IndexPage: FC = () => {
 };
 
 
+----- ./pages/moduleHierarchy.tsx -----
+import React, { FC } from "react";
+
+export const ModuleHierarchy: FC = () => {
+  return (
+    <span>Looky here!</span>
+  );
+};
+
+
+----- ./pages/database.tsx -----
+import React, { FC } from "react";
+
+export const Database: FC = () => {
+  return (
+    <span>Looky here!</span>
+  );
+};
+
+
+----- ./pages/index.tsx -----
+import React, { FC } from "react";
+import { CanvasArea } from "../components/CanvasArea";
+import { useOutletContext } from "react-router-dom";
+import { Shape, Connection } from "../components/Layout";
+
+interface OutletContextType {
+  shapes: Shape[];
+  connections: Connection[];
+  setShapes: React.Dispatch<React.SetStateAction<Shape[]>>;
+  setConnections: React.Dispatch<React.SetStateAction<Connection[]>>;
+}
+
+export const IndexPage: FC = () => {
+  const { shapes, connections, setShapes, setConnections } = useOutletContext<OutletContextType>();
+
+  return (
+    <div className="w-full h-full flex">
+      <div className="flex-1 relative">
+        <CanvasArea
+          shapes={shapes}
+          connections={connections}
+          onShapesUpdate={setShapes}
+          onConnectionsUpdate={setConnections}
+        />
+      </div>
+    </div>
+  );
+};
+
+
+----- ./pages/search.tsx -----
+import React, { FC } from "react";
+
+export const Search: FC = () => {
+  return (
+    <span>Looky here!</span>
+  );
+};
+
+
 ----- ./pages/boardInterface.tsx -----
 import React, { FC } from "react";
 
@@ -233,25 +375,117 @@ export const BoardInterface: FC = () => {
 
 
 ----- ./router.tsx -----
-import { FC } from "react";
+import { FC, Suspense, lazy, LazyExoticComponent } from "react";
 import { HashRouter, Route, Routes } from "react-router-dom";
-import { IndexPage } from "./pages/explorer";
-import { PopupPage } from "./pages/popup";
 import { Layout } from "./components/Layout";
 
+// Lazy load all page components, mapping named exports to default
+const IndexPage = lazy(() =>
+  import("./pages/explorer").then((module) => ({ default: module.IndexPage }))
+);
+const PopupPage = lazy(() =>
+  import("./pages/popup").then((module) => ({ default: module.PopupPage }))
+);
+const BoardInterfacePage = lazy(() =>
+  import("./pages/boardInterface").then((module) => ({ default: module.BoardInterface }))
+);
+const ConfigurePage = lazy(() =>
+  import("./pages/configure").then((module) => ({ default: module.Configure }))
+);
+const DatabasePage = lazy(() =>
+  import("./pages/database").then((module) => ({ default: module.Database }))
+);
+const ExplorerPage = lazy(() =>
+  import("./pages/explorer").then((module) => ({ default: module.IndexPage }))
+);
+const ModuleHierarchyPage = lazy(() =>
+  import("./pages/moduleHierarchy").then((module) => ({
+    default: module.ModuleHierarchy
+  }))
+);
+const NewCanvasPage = lazy(() =>
+  import("./pages/newCanvas").then((module) => ({ default: module.NewCanvas }))
+);
+const RegistersAndMemoryPage = lazy(() =>
+  import("./pages/registersAndMemory").then((module) => ({
+    default: module.RegistersAndMemory
+  }))
+);
+const RunSimulationPage = lazy(() =>
+  import("./pages/runSimulation").then((module) => ({
+    default: module.RunSimulation
+  }))
+);
+const SearchPage = lazy(() =>
+  import("./pages/search").then((module) => ({ default: module.Search }))
+);
+const SimulationViewerPage = lazy(() =>
+  import("./pages/simulationViewer").then((module) => ({
+    default: module.SimulationViewer
+  }))
+);
+const TestBenchPage = lazy(() =>
+  import("./pages/testBench").then((module) => ({ default: module.TestBench }))
+);
+const VersionControlPage = lazy(() =>
+  import("./pages/versionControl").then((module) => ({
+    default: module.VersionControl
+  }))
+);
+
+// Define a type for route configuration
+interface RouteConfig {
+  path: string;
+  component: LazyExoticComponent<FC>;
+  exact?: boolean;
+}
+
+// Centralized route definitions
+const routes: RouteConfig[] = [
+  { path: "/", component: IndexPage, exact: true },
+  { path: "/boardinterface", component: BoardInterfacePage },
+  { path: "/configure", component: ConfigurePage },
+  { path: "/database", component: DatabasePage },
+  { path: "/explorer", component: ExplorerPage },
+  { path: "/modulehierarchy", component: ModuleHierarchyPage },
+  { path: "/newcanvas", component: NewCanvasPage },
+  { path: "/popup", component: PopupPage },
+  { path: "/registersandmemory", component: RegistersAndMemoryPage },
+  { path: "/runsimulation", component: RunSimulationPage },
+  { path: "/search", component: SearchPage },
+  { path: "/simulationviewer", component: SimulationViewerPage },
+  { path: "/testbench", component: TestBenchPage },
+  { path: "/versioncontrol", component: VersionControlPage },
+];
+
+// LazyRoute component to wrap lazy-loaded components with Suspense
+const LazyRoute: FC<{ component: LazyExoticComponent<FC> }> = ({ component: Component }) => (
+  <Suspense fallback={<div>Loading...</div>}>
+    <Component />
+  </Suspense>
+);
+
+// Router component
 export const Router: FC = () => {
   return (
     <HashRouter>
       <Routes>
         <Route path="/" element={<Layout />}>
-          <Route index element={<IndexPage />} />
-          <Route path="popup" element={<PopupPage />} />
+          {routes.map((route) => (
+            <Route
+              key={route.path}
+              path={route.path}
+              element={<LazyRoute component={route.component} />}
+              index={route.exact}
+            />
+          ))}
+          {/* Fallback route for undefined paths */}
+          <Route path="*" element={<div>404 - Page Not Found</div>} />
         </Route>
       </Routes>
     </HashRouter>
   );
 };
-
 
 ----- ./components/Terminal/index.tsx -----
 import React, { useState, useRef, useEffect } from 'react';
@@ -403,9 +637,10 @@ export const Terminal: React.FC = () => {
 
 
 ----- ./components/SideBar/index.tsx -----
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
 import { CanvasMenu } from "../CanvasMenu";
 import { LuFolder, LuFastForward, LuFile, LuSearch, LuDatabase, LuCircuitBoard, LuGitPullRequest, LuLayoutGrid, LuRadioReceiver, LuComputer, LuServer, LuWrench } from 'react-icons/lu';
+import { useNavigate } from "react-router-dom";
 
 interface MenuItem {
   id: string;
@@ -414,16 +649,21 @@ interface MenuItem {
   onClick: () => void;
 }
 
-interface SideBarProps {
-  onAddObject: (type: 'sensor' | 'output' | 'if') => void;
-}
 
-
-export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
+export const SideBar: React.FC<any> = ({ onAddObject }) => {
 
   const [collapsed, setCollapsed] = useState(false);
   const [showCanvasMenu, setShowCanvasMenu] = useState(false);
   const [selectedMenuItem, setSelectedMenuItem] = useState<string | null>(null);
+
+  // Add navigation effect
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (selectedMenuItem) {
+      navigate(`/${selectedMenuItem}`);
+    }
+  }, [selectedMenuItem, navigate]);
 
   const handleAddObject = (type: string) => {
     console.log("Add object:", type);
@@ -444,7 +684,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuFastForward />,
       label: "Run Simulation",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("runSimulation");
       }
     },
@@ -453,7 +692,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuFile />,
       label: "New Canvas",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("newCanvas");
       }
     },
@@ -462,7 +700,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuSearch />,
       label: "Search",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("search");
       }
     },
@@ -471,7 +708,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuDatabase />,
       label: "Database",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("database");
       }
     },
@@ -480,7 +716,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuCircuitBoard />,
       label: "Board Interface",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("boardInterface");
       }
     },
@@ -489,7 +724,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuGitPullRequest />,
       label: "Version Control",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("versionControl");
       }
     },
@@ -498,7 +732,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuLayoutGrid />,
       label: "Module Hierarchy",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("moduleHierarchy");
       }
     },
@@ -507,7 +740,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuRadioReceiver />,
       label: "Registers & Memory",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("registersAndMemory");
       }
     },
@@ -516,7 +748,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuComputer />,
       label: "Simulation Viewer",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("simulationViewer");
       }
     },
@@ -525,7 +756,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuServer />,
       label: "Test Bench",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("testBench");
       }
     },
@@ -534,7 +764,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuWrench />,
       label: "Configure",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("configure");
       }
     }
@@ -596,69 +825,25 @@ import ReactFlow, {
   NodeTypes,
   Connection as FlowConnection,
 } from 'reactflow';
-import { Handle, Position } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { Terminal } from '../Terminal';
+import SensorNode from '../nodes/SensorNode';
+import OutputNode from '../nodes/OutputNode';
+import IfNode from '../nodes/IfNode';
+import PortInterface from '../nodes/PortInterface';
+import TemperatureSensor from '../nodes/TemperatureSensor';
 
-interface Shape {
-  id: number;
-  type: 'sensor' | 'output' | 'if';
-  x: number;
-  y: number;
-}
 
-interface CustomConnection {
-  fromId: number;
-  toId: number;
-}
-
-interface Props {
-  shapes: Shape[];
-  connections: CustomConnection[];
-  onShapesUpdate: (updated: Shape[]) => void;
-  onConnectionsUpdate: (updated: CustomConnection[]) => void;
-  code: string;
-  onCodeUpdate: (newCode: string) => void;
-}
-
-// Sensor node: a device with a left target and right source handle.
-const SensorNode = ({ data }: any) => (
-  <div style={{ border: '1px solid #444', borderRadius: '4px', backgroundColor: '#0A0', color: 'white', padding: '8px', fontFamily: 'monospace', minWidth: '120px' }}>
-    <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
-    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Sensor</div>
-    <div>{data.label || "Temperature Sensor"}</div>
-    <Handle type="source" position={Position.Right} style={{ background: '#555' }} />
-  </div>
-);
-
-// Output node: a device with a left target and right source handle.
-const OutputNode = ({ data }: any) => (
-  <div style={{ border: '1px solid #444', borderRadius: '4px', backgroundColor: '#007acc', color: 'white', padding: '8px', fontFamily: 'monospace', minWidth: '120px' }}>
-    <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
-    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Output</div>
-    <div>{data.label || "Display Output"}</div>
-    <Handle type="source" position={Position.Right} style={{ background: '#555' }} />
-  </div>
-);
-
-// If node: with one target handle on left and two source handles for true/false branches.
-const IfNode = ({ data }: any) => (
-  <div style={{ border: '1px solid #444', borderRadius: '4px', backgroundColor: '#ffcc00', color: '#333', padding: '8px', fontFamily: 'monospace', minWidth: '140px' }}>
-    <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
-    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>If Condition</div>
-    <div>{data.label || "if (x > 10)"}</div>
-    <Handle type="source" position={Position.Right} id="true" style={{ top: '30%', background: '#555' }} />
-    <Handle type="source" position={Position.Right} id="false" style={{ top: '70%', background: '#555' }} />
-  </div>
-);
 
 const nodeTypes: NodeTypes = {
   sensor: SensorNode,
+  temp_sensor: TemperatureSensor,
   output: OutputNode,
   if: IfNode,
+  port_interface: PortInterface,
 };
 
-export const CanvasArea: React.FC<Props> = ({
+export const CanvasArea: React.FC<any> = ({
   shapes,
   connections,
   onShapesUpdate,
@@ -666,11 +851,9 @@ export const CanvasArea: React.FC<Props> = ({
   code,
   onCodeUpdate,
 }) => {
-  // Mode state: "canvas", "code", "diagram"
   const [mode, setMode] = useState<"canvas" | "code" | "diagram">("canvas");
 
-  // Map shapes to ReactFlow nodes.
-  const nodes: Node[] = shapes.map((shape) => ({
+  const nodes: Node[] = shapes.map((shape: { id: { toString: () => any; }; x: any; y: any; type: string; }) => ({
     id: shape.id.toString(),
     position: { x: shape.x, y: shape.y },
     data: {
@@ -684,8 +867,7 @@ export const CanvasArea: React.FC<Props> = ({
     type: shape.type,
   }));
 
-  // Map connections to edges.
-  const edges: Edge[] = connections.map((conn) => ({
+  const edges: Edge[] = connections.map((conn: { fromId: { toString: () => any; }; toId: { toString: () => any; }; }) => ({
     id: `e${conn.fromId}-${conn.toId}`,
     source: conn.fromId.toString(),
     target: conn.toId.toString(),
@@ -697,7 +879,7 @@ export const CanvasArea: React.FC<Props> = ({
   const onNodeDragStop = useCallback(
     (_: any, node: Node) => {
       const id = parseInt(node.id);
-      const updatedShapes = shapes.map((shape) =>
+      const updatedShapes = shapes.map((shape: { id: number; }) =>
         shape.id === id
           ? { ...shape, x: node.position.x, y: node.position.y }
           : shape
@@ -719,7 +901,6 @@ export const CanvasArea: React.FC<Props> = ({
     [connections, onConnectionsUpdate]
   );
 
-  // Remove extra node if found (left unchanged)
   const xpath = '/html/body/div/div/div[2]/main/div/div/div/div/div[4]';
   const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
   const nodeFound = result.singleNodeValue;
@@ -727,7 +908,6 @@ export const CanvasArea: React.FC<Props> = ({
     nodeFound.parentNode.removeChild(nodeFound);
   }
 
-  // Render the mode switcher in the top left corner of the canvas area.
   const renderModeSwitcher = () => (
     <div className="absolute top-0 right-0 z-10 flex flex-col space-y-2 p-2">
       <button
@@ -751,7 +931,6 @@ export const CanvasArea: React.FC<Props> = ({
     </div>
   );
 
-  // Render content based on selected mode.
   const renderContent = () => {
     switch(mode) {
       case "canvas":
@@ -800,13 +979,11 @@ export const CanvasArea: React.FC<Props> = ({
       <div className="w-full h-full relative">
         {renderModeSwitcher()}
         {renderContent()}
-        {/* Add the terminal interface */}
         <Terminal />
       </div>
     </ReactFlowProvider>
   );
 };
-
 
 ----- ./components/Layout/index.tsx -----
 import React, { FC, useEffect, useState, useRef } from 'react';
@@ -895,17 +1072,17 @@ function hello() {
   };
 
   // Add new object to active canvas.
-  const handleAddObject = (type: 'sensor' | 'output' | 'if') => {
-    let newShape: Shape;
-    if (type === "sensor") {
-      newShape = { id: shapeCounter.current++, type: "sensor", x: 200, y: 200 };
-    } else if (type === "output") {
-      newShape = { id: shapeCounter.current++, type: "output", x: 300, y: 300 };
-    } else if (type === "if") {
-      newShape = { id: shapeCounter.current++, type: "if", x: 400, y: 250 };
-    } else {
-      return; // Handle invalid type
-    }
+  const handleAddObject = (type: Shape['type']) => {
+    const defaultX = 250;
+    const defaultY = 250;
+    
+    const newShape: Shape = {
+      id: shapeCounter.current++,
+      type,
+      x: defaultX,
+      y: defaultY
+    };
+    
     handleShapesUpdate([...activeCanvas.shapes, newShape]);
   };
 
@@ -1280,39 +1457,798 @@ export const Titlebar: FC = () => {
   );
 };
 
+----- ./components/nodes/IfNode.tsx -----
+import React from 'react';
+import { Handle, Position } from 'reactflow';
+
+interface IfNodeProps {
+  data: {
+    label?: string;
+  };
+}
+
+const IfNode: React.FC<IfNodeProps> = ({ data }) => (
+  <div style={{ border: '1px solid #444', borderRadius: '4px', backgroundColor: '#ffcc00', color: '#333', padding: '8px', fontFamily: 'monospace', minWidth: '140px' }}>
+    <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
+    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>If Condition</div>
+    <div>{data.label || "if (x > 10)"}</div>
+    <Handle type="source" position={Position.Right} id="true" style={{ top: '30%', background: '#555' }} />
+    <Handle type="source" position={Position.Right} id="false" style={{ top: '70%', background: '#555' }} />
+  </div>
+);
+
+export default IfNode;
+
+----- ./components/nodes/__tests__/SensorNode.test.tsx -----
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import SensorNode from '../SensorNode';
+import { describe, it, expect } from '@jest/globals';
+
+describe('SensorNode', () => {
+  it('renders with default label', () => {
+    render(<SensorNode data={{}} />);
+    expect(screen.getByText('Sensor')).toBeInTheDocument();
+    expect(screen.getByText('Temperature Sensor')).toBeInTheDocument();
+  });
+
+  it('renders with custom label', () => {
+    render(<SensorNode data={{ label: 'Custom Sensor' }} />);
+    expect(screen.getByText('Sensor')).toBeInTheDocument();
+    expect(screen.getByText('Custom Sensor')).toBeInTheDocument();
+  });
+
+  it('has correct styles', () => {
+    render(<SensorNode data={{}} />);
+    const node = screen.getByText('Sensor').parentElement;
+    expect(node).toHaveStyle({
+      border: '1px solid #444',
+      borderRadius: '4px',
+      backgroundColor: '#0A0',
+      color: 'white',
+      padding: '8px',
+      fontFamily: 'monospace',
+      minWidth: '120px',
+    });
+  });
+});
+
+
+----- ./components/nodes/__tests__/OutputNode.test.tsx -----
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import OutputNode from '../OutputNode';
+import { describe, it, expect } from '@jest/globals';
+
+describe('OutputNode', () => {
+  it('renders with default label', () => {
+    render(<OutputNode data={{}} />);
+    expect(screen.getByText('Output')).toBeInTheDocument();
+    expect(screen.getByText('Display Output')).toBeInTheDocument();
+  });
+
+  it('renders with custom label', () => {
+    render(<OutputNode data={{ label: 'Custom Output' }} />);
+    expect(screen.getByText('Output')).toBeInTheDocument();
+    expect(screen.getByText('Custom Output')).toBeInTheDocument();
+  });
+
+  it('has correct styles', () => {
+    render(<OutputNode data={{}} />);
+    const node = screen.getByText('Output').parentElement;
+    expect(node).toHaveStyle({
+      border: '1px solid #444',
+      borderRadius: '4px',
+      backgroundColor: '#007acc',
+      color: 'white',
+      padding: '8px',
+      fontFamily: 'monospace',
+      minWidth: '120px',
+    });
+  });
+});
+
+----- ./components/nodes/__tests__/IfNode.test.tsx -----
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import IfNode from '../IfNode';
+import { describe, it, expect } from '@jest/globals';
+
+describe('IfNode', () => {
+  it('renders with default label', () => {
+    render(<IfNode data={{}} />);
+    expect(screen.getByText('If Condition')).toBeInTheDocument();
+    expect(screen.getByText('if (x > 10)')).toBeInTheDocument();
+  });
+
+  it('renders with custom label', () => {
+    render(<IfNode data={{ label: 'Custom Condition' }} />);
+    expect(screen.getByText('If Condition')).toBeInTheDocument();
+    expect(screen.getByText('Custom Condition')).toBeInTheDocument();
+  });
+
+  it('has correct styles', () => {
+    render(<IfNode data={{}} />);
+    const node = screen.getByText('If Condition').parentElement;
+    expect(node).toHaveStyle({
+      border: '1px solid #444',
+      borderRadius: '4px',
+      backgroundColor: '#ffcc00',
+      color: '#333',
+      padding: '8px',
+      fontFamily: 'monospace',
+      minWidth: '140px',
+    });
+  });
+});
+
+----- ./components/nodes/OutputNode.tsx -----
+import React from 'react';
+import { Handle, Position } from 'reactflow';
+
+interface OutputNodeProps {
+  data: {
+    label?: string;
+  };
+}
+
+const OutputNode: React.FC<OutputNodeProps> = ({ data }) => (
+  <div style={{ border: '1px solid #444', borderRadius: '4px', backgroundColor: '#007acc', color: 'white', padding: '8px', fontFamily: 'monospace', minWidth: '120px' }}>
+    <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
+    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Output</div>
+    <div>{data.label || "Display Output"}</div>
+    <Handle type="source" position={Position.Right} style={{ background: '#555' }} />
+  </div>
+);
+
+export default OutputNode;
+
+----- ./components/nodes/SensorNode.tsx -----
+import React from 'react';
+import { Handle, Position } from 'reactflow';
+
+interface SensorNodeProps {
+  data: {
+    label?: string;
+  };
+}
+
+const SensorNode: React.FC<SensorNodeProps> = ({ data }) => (
+  <div style={{ border: '1px solid #444', borderRadius: '4px', backgroundColor: '#0A0', color: 'white', padding: '8px', fontFamily: 'monospace', minWidth: '120px' }}>
+    <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
+    <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Sensor</div>
+    <div>{data.label || "Temperature Sensor"}</div>
+    <Handle type="source" position={Position.Right} style={{ background: '#555' }} />
+  </div>
+);
+
+export default SensorNode;
+
+----- ./components/nodes/PortInterface.tsx -----
+import React, { useState } from 'react';
+import { Handle, Position } from 'reactflow';
+
+interface PortInterfaceProps {
+  data: {
+    gpio3v3?: CommConfig;
+    gpio1v8?: CommConfig;
+    lvds?: number[];
+  };
+}
+
+interface CommConfig {
+  type: 'SPI Main' | 'SPI Sub' | 'I2C' | 'UART' | 'CAN' | '';
+  properties?: any;
+}
+
+const PortInterface: React.FC<PortInterfaceProps> = ({ data }) => {
+  const [gpio3v3, setGpio3v3] = useState<CommConfig>(data.gpio3v3 || { type: '' });
+  const [gpio1v8, setGpio1v8] = useState<CommConfig>(data.gpio1v8 || { type: '' });
+  const [lvds, setLvds] = useState<number[]>(data.lvds || []);
+  const [newLvds, setNewLvds] = useState<string>('');
+
+  const commTypes = ['SPI Main', 'SPI Sub', 'I2C', 'UART', 'CAN'];
+
+  const handleCommChange = (
+    section: 'gpio3v3' | 'gpio1v8',
+    type: string
+  ) => {
+    const config: CommConfig = { type: type as any, properties: {} };
+    if (type === 'SPI Main' || type === 'SPI Sub') {
+      config.properties = {
+        mode: 'full duplex',
+        dataSpeed: '',
+        dataLength: '',
+        dataOrder: 'LSB',
+        clockParity: '',
+        clockPhase: '',
+      };
+    } else if (type === 'I2C') {
+      config.properties = {
+        dataSpeed: 'standard',
+        address: '',
+        direction: 'transmit',
+      };
+    } else if (type === 'UART') {
+      config.properties = {
+        baudRate: '',
+        startBit: '',
+        stopBits: '',
+        parityBits: '',
+        dataBits: '',
+        direction: 'transmit',
+      };
+    } else if (type === 'CAN') {
+      config.properties = {
+        baudRate: 'fault-tolerant',
+        messageId: '',
+      };
+    }
+    if (section === 'gpio3v3') {
+      setGpio3v3(config);
+    } else {
+      setGpio1v8(config);
+    }
+  };
+
+  const handlePropertyChange = (
+    section: 'gpio3v3' | 'gpio1v8',
+    prop: string,
+    value: string
+  ) => {
+    const setConfig = section === 'gpio3v3' ? setGpio3v3 : setGpio1v8;
+    setConfig((prev) => ({
+      ...prev,
+      properties: { ...prev.properties, [prop]: value },
+    }));
+  };
+
+  const handleAddLvds = () => {
+    const num = parseInt(newLvds);
+    if (isNaN(num) || num < 0 || num > 16) return;
+    const currentSum = lvds.reduce((sum, n) => sum + n, 0);
+    if (currentSum + num > 16) {
+      window.alert('Maximum LVDS sum of 16 exceeded!');
+      return;
+    }
+    setLvds([...lvds, num]);
+    setNewLvds('');
+  };
+
+  const renderCommSection = (section: 'gpio3v3' | 'gpio1v8', config: CommConfig) => {
+    const setConfig = section === 'gpio3v3' ? setGpio3v3 : setGpio1v8;
+    return (
+      <div style={{ marginBottom: '12px' }}>
+        <h4 style={{ fontSize: '12px', marginBottom: '4px' }}>
+          {section === 'gpio3v3' ? 'GPIO 3.3V' : 'GPIO 1.8V'}
+        </h4>
+        <select
+          style={{
+            width: '100%',
+            padding: '4px',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+            fontSize: '12px',
+            appearance: 'auto',
+          }}
+          value={config.type}
+          onChange={(e) => handleCommChange(section, e.target.value)}
+        >
+          <option value="">Choose option</option>
+          {commTypes.map((type) => (
+            <option key={type} value={type}>{type}</option>
+          ))}
+        </select>
+        {config.type && renderProperties(section, config)}
+      </div>
+    );
+  };
+
+  const renderProperties = (section: 'gpio3v3' | 'gpio1v8', config: CommConfig) => {
+    if (config.type === 'SPI Main' || config.type === 'SPI Sub') {
+      return (
+        <div style={{ marginTop: '8px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+            {['Full-Duplex', 'Half-Duplex', 'Receive Only', 'Transmit Only'].map((mode) => (
+              <label key={mode} style={{ display: 'flex', alignItems: 'center', fontSize: '12px' }}>
+                <input
+                  type="radio"
+                  name={`${section}-mode`}
+                  value={mode.toLowerCase().replace(' ', ' ')}
+                  checked={config.properties.mode === mode.toLowerCase().replace(' ', ' ')}
+                  onChange={(e) => handlePropertyChange(section, 'mode', e.target.value)}
+                  style={{ marginRight: '4px' }}
+                />
+                {mode}
+              </label>
+            ))}
+          </div>
+          <div style={{ display: 'grid', gap: '4px' }}>
+            <label style={{ fontSize: '12px' }}>
+              Data Speed
+              <input
+                type="text"
+                placeholder="Type here"
+                value={config.properties.dataSpeed}
+                onChange={(e) => handlePropertyChange(section, 'dataSpeed', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '4px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                }}
+              />
+            </label>
+            <label style={{ fontSize: '12px' }}>
+              Data Length
+              <input
+                type="text"
+                placeholder="Type here"
+                value={config.properties.dataLength}
+                onChange={(e) => handlePropertyChange(section, 'dataLength', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '4px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                }}
+              />
+            </label>
+            <label style={{ fontSize: '12px' }}>
+              Data Order
+              <select
+                value={config.properties.dataOrder}
+                onChange={(e) => handlePropertyChange(section, 'dataOrder', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '4px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  appearance: 'auto',
+                }}
+              >
+                <option value="LSB">LSB</option>
+                <option value="MSB">MSB</option>
+              </select>
+            </label>
+            <label style={{ fontSize: '12px' }}>
+              Clock Polarity
+              <input
+                type="text"
+                placeholder="Type here"
+                value={config.properties.clockParity}
+                onChange={(e) => handlePropertyChange(section, 'clockParity', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '4px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                }}
+              />
+            </label>
+            <label style={{ fontSize: '12px' }}>
+              Clock Phase
+              <input
+                type="text"
+                placeholder="Type here"
+                value={config.properties.clockPhase}
+                onChange={(e) => handlePropertyChange(section, 'clockPhase', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '4px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                }}
+              />
+            </label>
+          </div>
+        </div>
+      );
+    } else if (config.type === 'I2C') {
+      return (
+        <div style={{ marginTop: '8px', display: 'grid', gap: '4px' }}>
+          <label style={{ fontSize: '12px' }}>
+            Data Speed
+            <select
+              value={config.properties.dataSpeed}
+              onChange={(e) => handlePropertyChange(section, 'dataSpeed', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '4px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                fontSize: '12px',
+                appearance: 'auto',
+              }}
+            >
+              <option value="standard">Standard</option>
+              <option value="fast">Fast</option>
+              <option value="high-speed">High-Speed</option>
+              <option value="ultra-fast">Ultra-Fast</option>
+            </select>
+          </label>
+          <label style={{ fontSize: '12px' }}>
+            Address
+            <input
+              type="text"
+              placeholder="Type here"
+              value={config.properties.address}
+              onChange={(e) => handlePropertyChange(section, 'address', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '4px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                fontSize: '12px',
+              }}
+            />
+          </label>
+          <label style={{ fontSize: '12px' }}>
+            Direction
+            <select
+              value={config.properties.direction}
+              onChange={(e) => handlePropertyChange(section, 'direction', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '4px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                fontSize: '12px',
+                appearance: 'auto',
+              }}
+            >
+              <option value="transmit">Transmit</option>
+              <option value="receive">Receive</option>
+            </select>
+          </label>
+        </div>
+      );
+    } else if (config.type === 'UART') {
+      return (
+        <div style={{ marginTop: '8px', display: 'grid', gap: '4px' }}>
+          <label style={{ fontSize: '12px' }}>
+            Baud Rate
+            <input
+              type="text"
+              placeholder="Type here"
+              value={config.properties.baudRate}
+              onChange={(e) => handlePropertyChange(section, 'baudRate', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '4px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                fontSize: '12px',
+              }}
+            />
+          </label>
+          <label style={{ fontSize: '12px' }}>
+            Start Bit
+            <input
+              type="text"
+              placeholder="Type here"
+              value={config.properties.startBit}
+              onChange={(e) => handlePropertyChange(section, 'startBit', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '4px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                fontSize: '12px',
+              }}
+            />
+          </label>
+          <label style={{ fontSize: '12px' }}>
+            Stop Bits
+            <input
+              type="text"
+              placeholder="Type here"
+              value={config.properties.stopBits}
+              onChange={(e) => handlePropertyChange(section, 'stopBits', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '4px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                fontSize: '12px',
+              }}
+            />
+          </label>
+          <label style={{ fontSize: '12px' }}>
+            Parity Bits
+            <input
+              type="text"
+              placeholder="Type here"
+              value={config.properties.parityBits}
+              onChange={(e) => handlePropertyChange(section, 'parityBits', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '4px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                fontSize: '12px',
+              }}
+            />
+          </label>
+          <label style={{ fontSize: '12px' }}>
+            Data Bits
+            <input
+              type="text"
+              placeholder="Type here"
+              value={config.properties.dataBits}
+              onChange={(e) => handlePropertyChange(section, 'dataBits', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '4px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                fontSize: '12px',
+              }}
+            />
+          </label>
+          <label style={{ fontSize: '12px' }}>
+            Direction
+            <select
+              value={config.properties.direction}
+              onChange={(e) => handlePropertyChange(section, 'direction', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '4px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                fontSize: '12px',
+                appearance: 'auto',
+              }}
+            >
+              <option value="transmit">Transmit (TX)</option>
+              <option value="receive">Receive (RX)</option>
+            </select>
+          </label>
+        </div>
+      );
+    } else if (config.type === 'CAN') {
+      return (
+        <div style={{ marginTop: '8px', display: 'grid', gap: '4px' }}>
+          <label style={{ fontSize: '12px' }}>
+            Baud Rate
+            <select
+              value={config.properties.baudRate}
+              onChange={(e) => handlePropertyChange(section, 'baudRate', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '4px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                fontSize: '12px',
+                appearance: 'auto',
+              }}
+            >
+              <option value="fault-tolerant">Fault-Tolerant</option>
+              <option value="classical 2.0">Classical 2.0</option>
+              <option value="CANFD">CANFD</option>
+              <option value="CANXL">CANXL</option>
+            </select>
+          </label>
+          <label style={{ fontSize: '12px' }}>
+            Message ID
+            <input
+              type="text"
+              placeholder="Type here"
+              value={config.properties.messageId}
+              onChange={(e) => handlePropertyChange(section, 'messageId', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '4px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                fontSize: '12px',
+              }}
+            />
+          </label>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div style={{ backgroundColor: '#f5f5f7', padding: '12px', fontFamily: 'sans-serif', minWidth: '200px', position: 'relative', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.12)' }}>
+      <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
+      <div style={{ fontWeight: 'bold', fontSize: '14px', textAlign: 'center', marginBottom: '12px', color: '#333' }}>
+        Port Interface
+      </div>
+      {renderCommSection('gpio3v3', gpio3v3)}
+      {renderCommSection('gpio1v8', gpio1v8)}
+      <div>
+        <h4 style={{ fontSize: '12px', marginBottom: '4px' }}>
+          LVDS
+          <span style={{ fontSize: '10px', color: '#666', marginLeft: '4px' }}>(max 16)</span>
+        </h4>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          <input
+            type="number"
+            min="0"
+            max="16"
+            placeholder="Number"
+            value={newLvds}
+            onChange={(e) => setNewLvds(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '4px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              fontSize: '12px',
+              backgroundColor: '#fff',
+            }}
+          />
+          <button
+            onClick={handleAddLvds}
+            style={{
+              padding: '4px 8px',
+              backgroundColor: '#e0e0e0',
+              border: 'none',
+              borderRadius: '4px',
+              fontSize: '12px',
+              cursor: 'pointer',
+            }}
+          >
+            +
+          </button>
+        </div>
+        {lvds.length > 0 && (
+          <div style={{ fontSize: '12px', marginTop: '4px' }}>
+            Values: {lvds.join(', ')} (Sum: {lvds.reduce((sum, n) => sum + n, 0)})
+          </div>
+        )}
+      </div>
+      <Handle type="source" position={Position.Right} style={{ background: '#555' }} />
+    </div>
+  );
+};
+
+export default PortInterface;
+
+----- ./components/nodes/TemperatureSensor.tsx -----
+import React, { useState } from 'react';
+import { Handle, Position } from 'reactflow';
+
+interface TemperatureSensorProps {
+  data: {
+    rawData?: {
+      type: string;
+      properties: any;
+    };
+    unit?: 'Celsius' | 'Kelvin';
+  };
+}
+
+const TemperatureSensor: React.FC<TemperatureSensorProps> = ({ data }) => {
+  const [unit, setUnit] = useState<'Celsius' | 'Kelvin'>(data.unit || 'Celsius');
+  const rawData = data.rawData || { type: '', properties: {} };
+  const showClk = ['SPI Main', 'SPI Sub', 'I2C', 'UART', 'CAN'].includes(rawData.type);
+
+  return (
+    <div
+      style={{
+        backgroundColor: '#fee2e2', // Light red background
+        padding: '12px',
+        fontFamily: 'sans-serif',
+        minWidth: '140px',
+        position: 'relative',
+        borderRadius: '4px',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)', // Subtle shadow for depth
+      }}
+    >
+      <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
+      <div
+        style={{
+          fontWeight: 'bold',
+          fontSize: '14px',
+          textAlign: 'center',
+          marginBottom: '12px',
+          color: '#b91c1c', // Darker red for title
+        }}
+      >
+        Temperature Sensor
+      </div>
+      <div
+        style={{
+          display: 'grid',
+          gap: '8px',
+          fontSize: '12px',
+          color: '#333',
+        }}
+      >
+        <div>
+          <span style={{ fontWeight: 500 }}>Input: </span>
+          {rawData.type || 'No Config'}
+        </div>
+        <div>
+          <span style={{ fontWeight: 500 }}>Unit: </span>
+          <select
+            value={unit}
+            onChange={(e) => setUnit(e.target.value as 'Celsius' | 'Kelvin')}
+            style={{
+              width: '100%',
+              padding: '4px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              fontSize: '12px',
+              appearance: 'auto',
+              backgroundColor: '#fff',
+            }}
+          >
+            <option value="Celsius">Celsius</option>
+            <option value="Kelvin">Kelvin</option>
+          </select>
+        </div>
+        <div>
+          <span style={{ fontWeight: 500 }}>Output: </span>
+          Temperature ({unit})
+        </div>
+      </div>
+      {showClk && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '4px',
+            left: '4px',
+            fontSize: '10px',
+            backgroundColor: '#b91c1c', // Dark red badge
+            color: '#fff',
+            padding: '2px 6px',
+            borderRadius: '8px',
+            fontWeight: 500
+          }}
+        >
+          CLK
+        </div>
+      )}
+      <Handle type="source" position={Position.Right} style={{ background: '#555' }} />
+    </div>
+  );
+};
+
+export default TemperatureSensor;
+
 ----- ./components/CanvasMenu/index.tsx -----
 import React, { useState } from "react";
 
-interface CanvasMenuProps {
-  onAddObject: (type: 'sensor' | 'output' | 'if') => void;
-  collapsed?: boolean;
-}
 
-type CanvasComponent = {
-  type: 'sensor' | 'output' | 'if';
-  label: string;
-};
-
-type ComponentCategory = {
-  category: string;
-  components: CanvasComponent[];
-};
-
-export const componentsData: ComponentCategory[] = [
+export const componentsData = [
   {
     category: "Sensors",
-    components: [{ type: "sensor", label: "Add Sensor" }],
+    components: [
+      { type: "temp_sensor", label: "Add Temp Sensor" },
+      { type: "sensor", label: "Add Sensor" }
+    ],
   },
   {
     category: "Logic",
     components: [
       { type: "if", label: "Add If" },
-      { type: "output", label: "Add Output" },
     ],
   },
+  {
+    category: "Misc",
+    components: [
+      { type: "port_interface", label: "Add Port Interface" }
+    ],
+  },
+  {
+    category: "Debug",
+    components: [
+      { type: "output", label: "Add Output" },
+    ],
+  }
 ];
 
-export const CanvasMenu: React.FC<CanvasMenuProps> = ({ onAddObject, collapsed = false }) => {
+export const CanvasMenu: React.FC<any> = ({ onAddObject, collapsed = false }) => {
   const [openCategories, setOpenCategories] = useState<{ [key: string]: boolean }>(
     () =>
       componentsData.reduce((acc, curr) => {

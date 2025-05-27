@@ -98,10 +98,26 @@ export const Terminal: React.FC = () => {
     } else {
       // Collapse: store current height and reduce to header height.
       setExpandedHeight(height);
-      setHeight(30);
     }
     setCollapsed(!collapsed);
   };
+
+  // Render minimized bubble
+  if (collapsed) {
+    return (
+      <div 
+        className="fixed bottom-4 right-4 w-14 h-14 bg-gradient-to-br from-green-400 to-blue-500 rounded-full shadow-lg cursor-pointer hover:scale-110 transition-transform duration-200 flex items-center justify-center group"
+        onClick={toggleTerminal}
+      >
+        <div className="text-white text-xl font-mono">
+          <img src="/terminal.png" alt="<" className="w-6 h-6" />
+        </div>
+        <div className="absolute -top-8 right-0 bg-gray-800 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+          Open Terminal
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="absolute bottom-0 left-0 right-0 bg-gray-900 text-white flex flex-col" style={{ height }}>
@@ -116,31 +132,27 @@ export const Terminal: React.FC = () => {
             e.stopPropagation();
             toggleTerminal();
           }}
-          className="bg-gray-600 px-2 py-1 rounded text-sm"
+          className="bg-gray-600 px-2 py-1 rounded text-sm hover:bg-gray-500 transition-colors"
         >
-          {collapsed ? "Expand" : "Collapse"}
+          Minimize
         </button>
       </div>
-      {/* Show output and input only when not collapsed */}
-      {!collapsed && (
-        <>
-          <div ref={outputRef} className="flex-1 p-2 overflow-auto font-mono text-sm">
-            {output.map((line, index) => (
-              <div key={index}>{line}</div>
-            ))}
-          </div>
-          <div className="p-2 border-t border-gray-700 flex items-center">
-            <span className="mr-2">$</span>
-            <input
-              type="text"
-              className="bg-transparent outline-none w-full"
-              value={command}
-              onChange={(e) => setCommand(e.target.value)}
-              onKeyDown={onKeyDown}
-            />
-          </div>
-        </>
-      )}
+      {/* Terminal content */}
+      <div ref={outputRef} className="flex-1 p-2 overflow-auto font-mono text-sm">
+        {output.map((line, index) => (
+          <div key={index}>{line}</div>
+        ))}
+      </div>
+      <div className="p-2 border-t border-gray-700 flex items-center">
+        <span className="mr-2">$</span>
+        <input
+          type="text"
+          className="bg-transparent outline-none w-full"
+          value={command}
+          onChange={(e) => setCommand(e.target.value)}
+          onKeyDown={onKeyDown}
+        />
+      </div>
     </div>
   );
 };

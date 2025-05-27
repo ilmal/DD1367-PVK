@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import ReactFlow, {
   ReactFlowProvider,
   MiniMap,
@@ -17,8 +17,6 @@ import IfNode from '../nodes/IfNode';
 import PortInterface from '../nodes/PortInterface';
 import TemperatureSensor from '../nodes/TemperatureSensor';
 
-
-
 const nodeTypes: NodeTypes = {
   sensor: SensorNode,
   temp_sensor: TemperatureSensor,
@@ -36,6 +34,24 @@ export const CanvasArea: React.FC<any> = ({
   onCodeUpdate,
 }) => {
   const [mode, setMode] = useState<"canvas" | "code" | "diagram">("canvas");
+  const [isOverTrash, setIsOverTrash] = useState(false);
+  const trashRef = useRef<HTMLDivElement>(null);
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    nodeId: string | null;
+  }>({ visible: false, x: 0, y: 0, nodeId: null });
+
+  // Hide context menu on click elsewhere
+  React.useEffect(() => {
+    if (!contextMenu.visible) return;
+    const handle = () => setContextMenu((c) => ({ ...c, visible: false }));
+    window.addEventListener('click', handle);
+    return () => window.removeEventListener('click', handle);
+  }, [contextMenu.visible]);
 
   const nodes: Node[] = shapes.map((shape: { id: { toString: () => any; }; x: any; y: any; type: string; }) => ({
     id: shape.id.toString(),
@@ -49,6 +65,7 @@ export const CanvasArea: React.FC<any> = ({
           : "if (x > 10)",
     },
     type: shape.type,
+    draggable: true, // Ensure nodes are draggable
   }));
 
   const edges: Edge[] = connections.map((conn: { fromId: { toString: () => any; }; toId: { toString: () => any; }; }) => ({
@@ -73,6 +90,67 @@ export const CanvasArea: React.FC<any> = ({
     [shapes, onShapesUpdate]
   );
 
+  const onNodeDrag = useCallback(
+    (_: any, node: Node) => {
+      // Update node position in state for smooth dragging
+      const id = parseInt(node.id);
+      const updatedShapes = shapes.map((shape: { id: number; }) =>
+        shape.id === id
+          ? { ...shape, x: node.position.x, y: node.position.y }
+          : shape
+      );
+      onShapesUpdate(updatedShapes);
+
+      // Trash can highlight logic
+      if (trashRef.current) {
+        const trashRect = trashRef.current.getBoundingClientRect();
+        // Use node absolute position (screen coordinates)
+        // node.position is in flow coordinates, so we need to get the DOM node position
+        // For simplicity, use mouse position if available (not perfect, but works for most cases)
+        // You can improve this by using event.clientX/clientY if available
+        // Here, we just check if the node's center is over the trash
+        const nodeCenterX = node.position.x;
+        const nodeCenterY = node.position.y;
+        // Get the bounding rect of the ReactFlow container
+        const flowContainer = trashRef.current.closest('.react-flow');
+        let offsetX = 0, offsetY = 0;
+        if (flowContainer) {
+          const flowRect = flowContainer.getBoundingClientRect();
+          offsetX = flowRect.left;
+          offsetY = flowRect.top;
+        }
+        const absX = nodeCenterX + offsetX;
+        const absY = nodeCenterY + offsetY;
+        const isOver =
+          absX >= trashRect.left &&
+          absX <= trashRect.right &&
+          absY >= trashRect.top &&
+          absY <= trashRect.bottom;
+        setIsOverTrash(isOver);
+      }
+    },
+    [shapes, onShapesUpdate]
+  );
+
+  const onNodeDragEnd = useCallback(
+    (_: any, node: Node) => {
+      if (isOverTrash && trashRef.current) {
+        // Remove the node
+        const id = parseInt(node.id);
+        const updatedShapes = shapes.filter((shape: { id: number; }) => shape.id !== id);
+        // Remove associated connections
+        const updatedConnections = connections.filter(
+          (conn: { fromId: number; toId: number; }) =>
+            conn.fromId !== id && conn.toId !== id
+        );
+        onShapesUpdate(updatedShapes);
+        onConnectionsUpdate(updatedConnections);
+      }
+      setIsOverTrash(false);
+    },
+    [shapes, connections, onShapesUpdate, onConnectionsUpdate, isOverTrash]
+  );
+
   const onConnect = useCallback(
     (connection: FlowConnection) => {
       if (!connection.source || !connection.target) return;
@@ -85,12 +163,30 @@ export const CanvasArea: React.FC<any> = ({
     [connections, onConnectionsUpdate]
   );
 
-  const xpath = '/html/body/div/div/div[2]/main/div/div/div/div/div[4]';
-  const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-  const nodeFound = result.singleNodeValue;
-  if (nodeFound && nodeFound.parentNode) {
-    nodeFound.parentNode.removeChild(nodeFound);
-  }
+  // Context menu handler for node right-click
+  const onNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
+    event.preventDefault();
+    setContextMenu({
+      visible: true,
+      x: event.clientX,
+      y: event.clientY,
+      nodeId: node.id,
+    });
+  }, []);
+
+  // Delete node and its edges
+  const handleDeleteNode = useCallback(() => {
+    if (!contextMenu.nodeId) return;
+    const id = parseInt(contextMenu.nodeId);
+    const updatedShapes = shapes.filter((shape: { id: number; }) => shape.id !== id);
+    const updatedConnections = connections.filter(
+      (conn: { fromId: number; toId: number; }) =>
+        conn.fromId !== id && conn.toId !== id
+    );
+    onShapesUpdate(updatedShapes);
+    onConnectionsUpdate(updatedConnections);
+    setContextMenu({ ...contextMenu, visible: false });
+  }, [contextMenu, shapes, connections, onShapesUpdate, onConnectionsUpdate]);
 
   const renderModeSwitcher = () => (
     <div className="absolute top-0 right-0 z-10 flex flex-col space-y-2 p-2">
@@ -116,26 +212,53 @@ export const CanvasArea: React.FC<any> = ({
   );
 
   const renderContent = () => {
-    switch(mode) {
+    switch (mode) {
       case "canvas":
         return (
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            nodeTypes={nodeTypes}
-            onNodeDragStop={onNodeDragStop}
-            onConnect={onConnect}
-            fitView
-          >
-            <MiniMap nodeColor={(node) => {
-              if (node.type === 'sensor') return '#0A0';
-              if (node.type === 'output') return '#007acc';
-              if (node.type === 'if') return '#ffcc00';
-              return '#eee';
-            }} />
-            <Controls />
-            <Background />
-          </ReactFlow>
+          <div className="relative w-full h-full">
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              nodeTypes={nodeTypes}
+              onNodeDragStop={onNodeDragStop}
+              onNodeDrag={onNodeDrag}
+              onConnect={onConnect}
+              fitView
+              onNodeContextMenu={onNodeContextMenu}
+            >
+              <MiniMap nodeColor={(node) => {
+                if (node.type === 'sensor') return '#0A0';
+                if (node.type === 'output') return '#007acc';
+                if (node.type === 'if') return '#ffcc00';
+                return '#eee';
+              }} />
+              <Controls />
+              <Background />
+            </ReactFlow>
+            {contextMenu.visible && (
+              <div
+                style={{
+                  position: 'fixed',
+                  top: contextMenu.y,
+                  left: contextMenu.x,
+                  zIndex: 1000,
+                  background: 'white',
+                  border: '1px solid #ccc',
+                  borderRadius: 4,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                  minWidth: 120,
+                }}
+                onClick={e => e.stopPropagation()}
+              >
+                <button
+                  className="w-full text-left px-4 py-2 hover:bg-red-100 text-red-600"
+                  onClick={handleDeleteNode}
+                >
+                  Delete
+                </button>
+              </div>
+            )}
+          </div>
         );
       case "code":
         return (

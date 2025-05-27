@@ -4,11 +4,17 @@ import { Handle, Position } from 'reactflow';
 interface OutputNodeProps {
   data: {
     label?: string;
+    onMouseEnter: () => void;
+    onMouseLeave: () => void;
   };
 }
 
 const OutputNode: React.FC<OutputNodeProps> = ({ data }) => (
-  <div style={{ border: '1px solid #444', borderRadius: '4px', backgroundColor: '#007acc', color: 'white', padding: '8px', fontFamily: 'monospace', minWidth: '120px' }}>
+  <div 
+    onMouseEnter={data.onMouseEnter} 
+    onMouseLeave={data.onMouseLeave} 
+    style={{ border: '1px solid #444', borderRadius: '4px', backgroundColor: '#007acc', color: 'white', padding: '8px', fontFamily: 'monospace', minWidth: '120px' }}
+  >
     <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
     <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>Output</div>
     <div>{data.label || "Display Output"}</div>

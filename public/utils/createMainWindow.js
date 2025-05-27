@@ -41,3 +41,17 @@ exports.createMainWindow = async () => {
 
 	return window;
 };
+
+
+ipcMain.on('minimize-window', () => {
+	BrowserWindow.getFocusedWindow()?.minimize();
+});
+
+ipcMain.on('maximize-window', () => {
+	const win = BrowserWindow.getFocusedWindow();
+	if (win) win.isMaximized() ? win.unmaximize() : win.maximize();
+});
+
+ipcMain.on('quit-app', () => {
+	app.quit();
+});

@@ -6,6 +6,8 @@ interface PortInterfaceProps {
     gpio3v3?: CommConfig;
     gpio1v8?: CommConfig;
     lvds?: number[];
+    onMouseEnter: () => void;
+    onMouseLeave: () => void;
   };
 }
 
@@ -430,7 +432,11 @@ const PortInterface: React.FC<PortInterfaceProps> = ({ data }) => {
   };
 
   return (
-    <div style={{ backgroundColor: '#f5f5f7', padding: '12px', fontFamily: 'sans-serif', minWidth: '200px', position: 'relative', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.12)' }}>
+    <div 
+      onMouseEnter={data.onMouseEnter} 
+      onMouseLeave={data.onMouseLeave} 
+      style={{ backgroundColor: '#f5f5f7', padding: '12px', fontFamily: 'sans-serif', minWidth: '200px', position: 'relative', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.12)' }}
+    >
       <Handle type="target" position={Position.Left} style={{ background: '#555' }} />
       <div style={{ fontWeight: 'bold', fontSize: '14px', textAlign: 'center', marginBottom: '12px', color: '#333' }}>
         Port Interface
