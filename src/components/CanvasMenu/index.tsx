@@ -1,35 +1,35 @@
 import React, { useState } from "react";
 
-interface CanvasMenuProps {
-  onAddObject: (type: 'sensor' | 'output' | 'if') => void;
-  collapsed?: boolean;
-}
 
-type CanvasComponent = {
-  type: 'sensor' | 'output' | 'if';
-  label: string;
-};
-
-type ComponentCategory = {
-  category: string;
-  components: CanvasComponent[];
-};
-
-export const componentsData: ComponentCategory[] = [
+export const componentsData = [
   {
     category: "Sensors",
-    components: [{ type: "sensor", label: "Add Sensor" }],
+    components: [
+      { type: "temp_sensor", label: "Add Temp Sensor" },
+      { type: "sensor", label: "Add Sensor" }
+    ],
   },
   {
     category: "Logic",
     components: [
       { type: "if", label: "Add If" },
-      { type: "output", label: "Add Output" },
     ],
   },
+  {
+    category: "Misc",
+    components: [
+      { type: "port_interface", label: "Add Port Interface" }
+    ],
+  },
+  {
+    category: "Debug",
+    components: [
+      { type: "output", label: "Add Output" },
+    ],
+  }
 ];
 
-export const CanvasMenu: React.FC<CanvasMenuProps> = ({ onAddObject, collapsed = false }) => {
+export const CanvasMenu: React.FC<any> = ({ onAddObject, collapsed = false }) => {
   const [openCategories, setOpenCategories] = useState<{ [key: string]: boolean }>(
     () =>
       componentsData.reduce((acc, curr) => {

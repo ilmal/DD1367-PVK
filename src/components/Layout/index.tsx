@@ -84,17 +84,17 @@ function hello() {
   };
 
   // Add new object to active canvas.
-  const handleAddObject = (type: 'sensor' | 'output' | 'if') => {
-    let newShape: Shape;
-    if (type === "sensor") {
-      newShape = { id: shapeCounter.current++, type: "sensor", x: 200, y: 200 };
-    } else if (type === "output") {
-      newShape = { id: shapeCounter.current++, type: "output", x: 300, y: 300 };
-    } else if (type === "if") {
-      newShape = { id: shapeCounter.current++, type: "if", x: 400, y: 250 };
-    } else {
-      return; // Handle invalid type
-    }
+  const handleAddObject = (type: Shape['type']) => {
+    const defaultX = 250;
+    const defaultY = 250;
+    
+    const newShape: Shape = {
+      id: shapeCounter.current++,
+      type,
+      x: defaultX,
+      y: defaultY
+    };
+    
     handleShapesUpdate([...activeCanvas.shapes, newShape]);
   };
 

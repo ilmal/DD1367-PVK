@@ -1,6 +1,7 @@
-import { FC, useState } from "react";
+import { FC, useState, useEffect } from "react";
 import { CanvasMenu } from "../CanvasMenu";
 import { LuFolder, LuFastForward, LuFile, LuSearch, LuDatabase, LuCircuitBoard, LuGitPullRequest, LuLayoutGrid, LuRadioReceiver, LuComputer, LuServer, LuWrench } from 'react-icons/lu';
+import { useNavigate } from "react-router-dom";
 
 interface MenuItem {
   id: string;
@@ -9,16 +10,21 @@ interface MenuItem {
   onClick: () => void;
 }
 
-interface SideBarProps {
-  onAddObject: (type: 'sensor' | 'output' | 'if') => void;
-}
 
-
-export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
+export const SideBar: React.FC<any> = ({ onAddObject }) => {
 
   const [collapsed, setCollapsed] = useState(false);
   const [showCanvasMenu, setShowCanvasMenu] = useState(false);
   const [selectedMenuItem, setSelectedMenuItem] = useState<string | null>(null);
+
+  // Add navigation effect
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (selectedMenuItem) {
+      navigate(`/${selectedMenuItem}`);
+    }
+  }, [selectedMenuItem, navigate]);
 
   const handleAddObject = (type: string) => {
     console.log("Add object:", type);
@@ -39,7 +45,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuFastForward />,
       label: "Run Simulation",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("runSimulation");
       }
     },
@@ -48,7 +53,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuFile />,
       label: "New Canvas",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("newCanvas");
       }
     },
@@ -57,7 +61,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuSearch />,
       label: "Search",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("search");
       }
     },
@@ -66,7 +69,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuDatabase />,
       label: "Database",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("database");
       }
     },
@@ -75,7 +77,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuCircuitBoard />,
       label: "Board Interface",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("boardInterface");
       }
     },
@@ -84,7 +85,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuGitPullRequest />,
       label: "Version Control",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("versionControl");
       }
     },
@@ -93,7 +93,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuLayoutGrid />,
       label: "Module Hierarchy",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("moduleHierarchy");
       }
     },
@@ -102,7 +101,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuRadioReceiver />,
       label: "Registers & Memory",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("registersAndMemory");
       }
     },
@@ -111,7 +109,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuComputer />,
       label: "Simulation Viewer",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("simulationViewer");
       }
     },
@@ -120,7 +117,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuServer />,
       label: "Test Bench",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("testBench");
       }
     },
@@ -129,7 +125,6 @@ export const SideBar: React.FC<SideBarProps> = ({ onAddObject }) => {
       icon: <LuWrench />,
       label: "Configure",
       onClick: () => {
-        setShowCanvasMenu((prev) => !prev);
         setSelectedMenuItem("configure");
       }
     }
