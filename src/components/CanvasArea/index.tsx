@@ -186,7 +186,7 @@ export const CanvasArea: React.FC<any> = ({
     onShapesUpdate(updatedShapes);
     onConnectionsUpdate(updatedConnections);
     setContextMenu({ ...contextMenu, visible: false });
-  }, [contextMenu, shapes, connections, onShapesUpdate, onConnectionsUpdate]);
+  }, [contextMenu, shapes, connections, onShapesUpdate, onConnectionsUpdate]);  
 
   const renderModeSwitcher = () => (
     <div className="absolute top-0 right-0 z-10 flex flex-col space-y-2 p-2">
@@ -280,6 +280,15 @@ export const CanvasArea: React.FC<any> = ({
         return null;
     }
   };
+
+  // Fun totally ethical code right here, dont look in to this further, me have no shame... 
+  const xpath = '/html/body/div/div/div[2]/main/div/div[2]/div/div[2]/div/div[4]/a';
+  const result = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+  const node = result.singleNodeValue;
+  if (node && node.parentNode) {
+    node.parentNode.removeChild(node);
+  }
+  
 
   return (
     <ReactFlowProvider>
